@@ -2,7 +2,7 @@ node_modules
 error.log
 combined.log
 renderscan_images
-images
+scans
 tests
 	.github
 	.vscode
