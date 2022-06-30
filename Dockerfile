@@ -10,7 +10,7 @@ RUN npm install
 COPY src ./src
 RUN npm run build
 
-EXPOSE 5000
+EXPOSE 7000
 EXPOSE 587
 
 CMD ["npm","start"]
