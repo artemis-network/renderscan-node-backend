@@ -1,0 +1,10 @@
+node_modules
+error.log
+combined.log
+renderscan_images
+images
+tests
+	.github
+	.vscode
+	.gitignore
+	.git
