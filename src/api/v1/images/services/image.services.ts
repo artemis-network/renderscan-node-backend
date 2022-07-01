@@ -5,6 +5,7 @@ import path from 'path'
 import axios, { Axios, AxiosRequestConfig, AxiosRequestHeaders } from 'axios'
 import FormData from 'form-data'
 import Jimp from 'jimp'
+import { spawn } from 'child_process'
 
 export class ImageServices {
 
@@ -78,13 +79,32 @@ export class ImageServices {
         return isDeleted;
     }
 
-    static cutImageService = async (username: string, inputFilePath: any) => {
+    static spawnPythonProcess = async (cutReceivedFilePath: string, cutMaskFilePath: string, currentCutFilePath: string) => {
+        const pythonProcess = spawn('python', [path.join(process.cwd(), 'python', 'composite.py'), cutReceivedFilePath, cutMaskFilePath, currentCutFilePath]);
+        let data = "";
+        for await (const chunk of pythonProcess.stdout) {
+            data += chunk;
+        }
+        let error = "";
+        for await (const chunk of pythonProcess.stderr) {
+            console.error('stderr chunk: ' + chunk);
+            error += chunk;
+        }
+        const exitCode = await new Promise((resolve, reject) => {
+            pythonProcess.on('close', resolve);
+        });
+        if (exitCode) {
+            throw new Error(`subprocess error exit ${exitCode}, ${error}`);
+        }
+        return data;
+    }
 
+    static cutImageService = async (username: string, inputFilePath: any) => {
         if (!fs.existsSync(IMAGE_CREDS.localImageFolderPath)) {
             fs.mkdirSync(IMAGE_CREDS.localImageFolderPath);
         }
-        if (!fs.existsSync(path.join(IMAGE_CREDS.localImageFolderPath,username))) {
-            fs.mkdirSync(path.join(IMAGE_CREDS.localImageFolderPath,username));
+        if (!fs.existsSync(path.join(IMAGE_CREDS.localImageFolderPath, username))) {
+            fs.mkdirSync(path.join(IMAGE_CREDS.localImageFolderPath, username));
         }
 
         const currTime = new Date().toISOString().replace(/T/, '_').replace(/\..+/, '').replace(':', '_').replace(':', '_')
@@ -118,7 +138,7 @@ export class ImageServices {
             },
             data: data
         };
-        
+
         const resp = await axios(requestConfig)
             .then(function (response) {
                 return response
@@ -134,18 +154,21 @@ export class ImageServices {
             const buffer = Buffer.from(base64str, 'base64');
             let mask = await Jimp.read(buffer)
             console.log(' > opening mask...')
+            let respImg = null
             if (mask) {
-                mask = mask.grayscale().resize(iWidth, iHeight, Jimp.RESIZE_BICUBIC)
                 mask.writeAsync(cutMaskFilePath)
                 console.log(' > compositing final image...')
-                const ref = await Jimp.read(cutReceivedFilePath)
-                const empty = new Jimp(iWidth,iHeight)
-                const composite = ref.mask(mask, 0, 0)
-                const scaled = composite.resize(composite.bitmap.width * 3, composite.bitmap.height * 3, Jimp.RESIZE_BICUBIC)
-                scaled.writeAsync(currentCutFilePath)
-                const respImg = await scaled.getBase64Async(scaled.getMIME())  
-                this.deleteTempFiles(currTime)
-                return {currentCutFileName, respImg}
+                try {
+                    const pythonResp = await this.spawnPythonProcess(cutReceivedFilePath, cutMaskFilePath, currentCutFilePath)
+                    if (pythonResp.trim() == "True") {
+                        const currentCutImg = await Jimp.read(currentCutFilePath)
+                        const respImg = await currentCutImg.getBase64Async(currentCutImg.getMIME())
+                        return { currentCutFileName, respImg }
+                    }
+                }
+                catch (e) {
+                    throw e;
+                }
             }
         }
         return
