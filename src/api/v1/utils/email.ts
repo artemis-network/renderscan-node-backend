@@ -1,6 +1,5 @@
 import nodemailer from 'nodemailer';
 import { EMAIL_CONFIG } from '../../../config'
-import { ErrorTypes } from '../errors/error.types';
 import { verificationHtml, forgotPasswordHtml } from './verification_htmls';
 
 export class EmailSender {
