@@ -72,6 +72,9 @@ export class ImageController {
 		} catch (e) {
 			return HttpFactory.STATUS_500_INTERNAL_SERVER_ERROR({ message: e }, res)
 		}
+	}
+
+	static saveGenerateImage = async (req: Request, res: Response) => {
 
 	}
 
