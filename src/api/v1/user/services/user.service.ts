@@ -9,7 +9,7 @@ const client: any = new OAuth2Client(GOOGLE_OAUTH_CLIENT)
 
 import { db } from '../../db'
 import { DBObject } from '../../db_object';
-import { DBErrors, ErrorTypes } from '../../errors/db.errors';
+import { ErrorFactory } from '../../errors/error_factory';
 
 type ErrorType = { name: string, message: string } | any
 
@@ -64,8 +64,8 @@ export class UserServices {
 			await user.get()
 			return true
 		} catch (err: ErrorType) {
-			if (err.name === ErrorTypes.OBJECT_NOT_FOUND_ERROR ||
-				err.name === ErrorTypes.OBJECT_UN_DEFINED_ERROR)
+			if (err.name === ErrorFactory.OBJECT_NOT_FOUND ||
+				err.name === ErrorFactory.OBJECT_UN_DEFINED)
 				return false
 			return false
 		}
@@ -105,8 +105,8 @@ export class UserServices {
 			return true;
 		} catch (err: ErrorType) {
 			if (
-				err.name === ErrorTypes.OBJECT_NOT_FOUND_ERROR ||
-				err.name === ErrorTypes.OBJECT_UN_DEFINED_ERROR
+				err.name === ErrorFactory.OBJECT_NOT_FOUND ||
+				err.name === ErrorFactory.OBJECT_UN_DEFINED
 			)
 				return false
 			return true
