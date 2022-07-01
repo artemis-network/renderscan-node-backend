@@ -25,7 +25,7 @@ router.post(`${userPrefix}/change-password/:token`, UserController.changePasswor
 
 router.get(`${userPrefix}/test-token`, authorizeUserMiddleWare, (req, res) => res.send("hello"));
 
-router.post(`${walletPrefix}`, authorizeUserMiddleWare, InAppWalletController.getWallet)
-router.post(`${walletPrefix}/deposit`, authorizeUserMiddleWare, InAppWalletController.depositFunds)
+router.post(`${walletPrefix}`, InAppWalletController.getWallet)
+router.post(`${walletPrefix}/deposit`, InAppWalletController.depositFunds)
 
 export { router as userRoutes }

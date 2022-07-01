@@ -1,6 +1,5 @@
 import { db } from '../../db'
 import { UserServices, Role } from '../services/user.service'
-import { InAppWalletServices } from '../services/in_app_wallet.service';
 import { logger } from '../../utils/logger';
 import { Request, Response } from 'express'
 
@@ -15,9 +14,9 @@ export class UserBootStartController {
 		const userCount = await UserModel.find().countDocuments();
 		if (userCount <= 0) {
 			logger.info(">> create admin user")
-			const user = await UserServices.createUser(ADMIN.username, ADMIN.email, ADMIN.password, Role.ADMIN, false)
-			const createdUser = await UserServices.getUserByEmail(ADMIN.email);
-			const details = await InAppWalletServices.depositFunds(createdUser?._id, deposit)
+			const hash = await UserServices.hashPassword(ADMIN.password);
+			const user = await UserServices.createUser(ADMIN.username, ADMIN.email, hash, Role.ADMIN, false)
+			const details = await UserServices.createWalletForUser(user?._id);
 			console.log(details)
 			logger.info(">> successfully admin user")
 			return HttpFactory.STATUS_200_OK({ message: "OK" }, res)

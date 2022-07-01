@@ -102,6 +102,7 @@ export class UserServices {
 		try {
 			const user = new DBObject(query)
 			await user.get()
+			console.log(user)
 			return true;
 		} catch (err: ErrorType) {
 			if (
@@ -109,7 +110,7 @@ export class UserServices {
 				err.name === ErrorFactory.OBJECT_UN_DEFINED
 			)
 				return false
-			return true
+			return false
 		}
 	}
 

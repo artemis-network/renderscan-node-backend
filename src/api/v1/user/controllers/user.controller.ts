@@ -14,7 +14,6 @@ export class UserController {
 	// @access public
 	static createUser = async (req: Request, res: Response) => {
 		try {
-
 			const { username, email, password } = new Required(req.body)
 				.addKey("username")
 				.addKey("email")
@@ -22,6 +21,7 @@ export class UserController {
 				.getItems() as UserInterface;
 
 			const isExists = await UserServices.isUserAlreadyExists(username, email)
+			console.log(isExists)
 			if (isExists) {
 				const response = {
 					errorType: "USER_ALREADY_EXIST", message: "Username or Email already in use",
@@ -40,6 +40,7 @@ export class UserController {
 			const response = { message: "Successfully created", errorType: "NONE", error: false };
 			return HttpFactory.STATUS_200_OK(response, res)
 		} catch (err) {
+			console.log(err)
 			return HttpFactory.STATUS_500_INTERNAL_SERVER_ERROR(err, res)
 		}
 	};

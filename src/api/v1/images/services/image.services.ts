@@ -80,7 +80,10 @@ export class ImageServices {
     }
 
     static spawnPythonProcess = async (cutReceivedFilePath: string, cutMaskFilePath: string, currentCutFilePath: string) => {
-        const pythonProcess = spawn('python', [path.join(process.cwd(), 'python', 'composite.py'), cutReceivedFilePath, cutMaskFilePath, currentCutFilePath]);
+        const pythonProcess = spawn('python3', [
+            path.join(
+                process.cwd(), 'src', 'api', 'v1', 'images', 'process', 'composite.py'
+            ), cutReceivedFilePath, cutMaskFilePath, currentCutFilePath]);
         let data = "";
         for await (const chunk of pythonProcess.stdout) {
             data += chunk;

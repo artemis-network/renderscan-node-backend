@@ -1,4 +1,6 @@
-FROM node:16
+FROM nikolaik/python-nodejs:latest
+
+RUN pip install PILLOW
 
 WORKDIR /app
 
@@ -9,6 +11,8 @@ RUN npm install
 
 COPY src ./src
 RUN npm run build
+
+
 
 EXPOSE 5001
 EXPOSE 587
