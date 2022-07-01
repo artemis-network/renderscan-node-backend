@@ -3,7 +3,7 @@ import { JWT } from "../utils/jwt";
 import { Role } from '../user/services/user.service'
 import { db } from '../db';
 
-const { User } = db
+const { UserModel } = db
 
 interface Session { role: Role, userId: string }
 
@@ -12,7 +12,7 @@ const authorizeUserMiddleWare = async (req: Request, res: Response, next: NextFu
 		const token = req.headers['authorization']?.toString();
 		let decoded = JWT.decodeJWTToken(token || "");
 		const session = decoded.session
-		const user = await User.findById(session.userId)
+		const user = await UserModel.findById(session.userId)
 		const isExpired = decoded.expires < new Date().getTime()
 		if ((user !== null || user !== undefined) && !isExpired) {
 			req.body.userId = user?._id;

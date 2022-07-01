@@ -20,20 +20,37 @@ const userSchema = new Schema({
 
 export class User {
   user: UserInterface;
-  constructor(user: UserInterface) {
-    this.user = user;
-  }
-  setFirstname(email: UserInterface["email"]) {
+  constructor(user: UserInterface) { this.user = user }
+  setEmail(email: UserInterface["email"]) {
     this.user.email = email
-    return this;
-  }
-
-  setLastname(password: UserInterface["password"]) {
-    this.user.password = password;
     return this;
   }
   setUsername(username: UserInterface["username"]) {
     this.user.username = username
+    return this;
+  }
+  setPassword(password: UserInterface["password"]) {
+    this.user.password = password;
+    return this;
+  }
+  setIsGoogleAccount(isGoogleAccount: UserInterface["isGoogleAccount"]) {
+    this.user.isGoogleAccount = isGoogleAccount;
+    return this;
+  }
+  setIsVerified(isVerified: UserInterface["isVerified"]) {
+    this.user.isVerified = isVerified;
+    return this;
+  }
+  setIsActivated(isActivated: UserInterface["isActivated"]) {
+    this.user.isActivated = isActivated;
+    return this;
+  }
+  setToken(token: UserInterface["token"]) {
+    this.user.token = token;
+    return this;
+  }
+  setUserType(userType: UserInterface["userType"]) {
+    this.user.userType = userType;
     return this;
   }
   get() {

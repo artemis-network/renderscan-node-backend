@@ -1,15 +1,34 @@
 import mongoose, { Schema, Model, Document } from 'mongoose';
-import { UserType } from '../../db'
+import { UserInterface } from './user.model'
 
-export type UserWalletType = { balance: number; isActive: Boolean; user: UserType | string }
+export interface InAppWalletInterface { balance: number; isActive: Boolean; user: UserInterface | string }
+export interface InAppWalletDoc extends InAppWalletInterface, Document { }
 
-export type UserWalletDocument = Document & UserWalletType;
-
-const UserWalletSchema = new Schema({
+const inAppWalletSchema = new Schema({
 	balance: { type: Schema.Types.Number, required: true, default: 5000 },
 	isActive: { type: Schema.Types.Boolean, required: true, },
 	user: { type: Schema.Types.ObjectId, ref: 'User' }
 });
 
-export const UserWallet: Model<UserWalletDocument> = mongoose
-	.model<UserWalletDocument>('User_Wallet', UserWalletSchema);
+export class InAppWallet {
+	wallet: InAppWalletInterface;
+	constructor(wallet: InAppWalletInterface) { this.wallet = wallet }
+	setBalance(balance: InAppWalletInterface["balance"]) {
+		this.wallet.balance = balance
+		return this;
+	}
+	setIsActive(isActivate: InAppWalletInterface["isActive"]) {
+		this.wallet.isActive = isActivate
+		return this;
+	}
+	setUser(user: InAppWalletInterface["user"]) {
+		this.wallet.user = user;
+		return this;
+	}
+	get() {
+		return this.wallet;
+	}
+}
+
+export const InAppWalletModel: Model<InAppWalletDoc> = mongoose
+	.model<InAppWalletDoc>('IN_APP_WALLET', inAppWalletSchema);

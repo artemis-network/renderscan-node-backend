@@ -13,7 +13,7 @@ import { ErrorFactory } from '../../errors/error_factory';
 
 type ErrorType = { name: string, message: string } | any
 
-const { User, UserWallet } = db;
+const { UserModel, InAppWalletModel } = db;
 
 export enum Role { ADMIN = "ADMIN", USER = "USER", GUEST = "GUEST" }
 
@@ -30,7 +30,7 @@ export class UserServices {
 	static setToken = async (email: string) => {
 		const token = UserServices.createToken();
 		try {
-			const query = await User.findOneAndUpdate({ email: email }, {
+			const query = await UserModel.findOneAndUpdate({ email: email }, {
 				$set: { token: token }
 			});
 			const user = new DBObject(query)
@@ -43,14 +43,14 @@ export class UserServices {
 
 	static updateToken = async (token: string) => {
 		const newToken = UserServices.createToken();
-		await User.findOneAndUpdate({ token: token }, {
+		await UserModel.findOneAndUpdate({ token: token }, {
 			$set: { token: newToken }
 		});
 		return newToken;
 	}
 
 	static setIsVerified = async (token: string, isVerified: boolean) => {
-		await User.findOneAndUpdate({ token: token }, {
+		await UserModel.findOneAndUpdate({ token: token }, {
 			$set: {
 				isVerified: isVerified
 			}
@@ -59,7 +59,7 @@ export class UserServices {
 
 	static isValidToken = async (token: string) => {
 		try {
-			const query = await User.findOne({ token: token });
+			const query = await UserModel.findOne({ token: token });
 			const user = new DBObject(query)
 			await user.get()
 			return true
@@ -72,7 +72,7 @@ export class UserServices {
 	}
 
 	static clearToken = async (token: string) => {
-		const user = await User.findOneAndUpdate({ token: token }, {
+		const user = await UserModel.findOneAndUpdate({ token: token }, {
 			$set: { token: "" }
 		});
 		await user?.save()
@@ -84,21 +84,21 @@ export class UserServices {
 	}
 
 	static setPassword = async (token: string, hash: string) => {
-		const user = await User.findOne({ token: token });
+		const user = await UserModel.findOne({ token: token });
 		await user?.updateOne({ $set: { password: hash } })
 	}
 
 	static createWalletForUser = async (user_id: string) =>
-		await UserWallet.create({ balance: 5000, isActive: true, user: user_id })
+		await InAppWalletModel.create({ balance: 5000, isActive: true, user: user_id })
 
 	static getUserByEmail = async (email: string) => {
-		const query = await User.findOne({ email: email })
+		const query = await UserModel.findOne({ email: email })
 		const user = new DBObject(query)
 		return await user.get();
 	}
 
 	static isUserAlreadyExists = async (username: string, email: string) => {
-		const query = await User.findOne({ $or: [{ username: username }, { email: email }] })
+		const query = await UserModel.findOne({ $or: [{ username: username }, { email: email }] })
 		try {
 			const user = new DBObject(query)
 			await user.get()
@@ -114,7 +114,7 @@ export class UserServices {
 	}
 
 	static createUser = async (username: string, email: string, hash: string, token: string, isGoogleAccount: boolean) => {
-		return await User.create({
+		return await UserModel.create({
 			username: username, email: email, password: hash, token: token,
 			isActivated: false, isGoogleAccount: isGoogleAccount, isVerified: false,
 			userType: Role.USER.toString()
@@ -123,7 +123,7 @@ export class UserServices {
 
 	static authenticateUser = async (username: string) => {
 		try {
-			const query = await User.findOne({ $or: [{ username: username }, { email: username }] })
+			const query = await UserModel.findOne({ $or: [{ username: username }, { email: username }] })
 			const user = new DBObject(query)
 			return user.get()
 		} catch (err) {
@@ -157,7 +157,7 @@ export class UserServices {
 		try {
 			const username = email.split("@")[0]
 			try {
-				const newUser = await User.create({
+				const newUser = await UserModel.create({
 					username: username, email: email, password: "", token: "",
 					isActivated: false, isGoogleAccount: true, isVerified: false,
 				})
@@ -171,7 +171,7 @@ export class UserServices {
 			} catch (err: any) {
 				console.log(err)
 				if (err["code"] === 11000) {
-					const user = await User.findOne({ email: email })
+					const user = await UserModel.findOne({ email: email })
 					const token: string = JWT.generateJWTToken(user?._id);
 					return {
 						error: false, userId: user?._id, message: "SUCCESS",

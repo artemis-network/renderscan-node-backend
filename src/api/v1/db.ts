@@ -2,10 +2,8 @@ import mongoose from 'mongoose';
 
 import { logger } from './utils/logger';
 
-import { User, UserDocument, UserType } from './user/models/user.model'
-import { UserWallet, UserWalletDocument, UserWalletType } from './user/models/wallet.model'
-
-import { RenderverseEmails, RenderverseEmailsDocument, } from './user/models/rendervers_emails.model'
+import { User, UserInterface, UserDoc, UserModel } from './user/models/user.model'
+import { InAppWallet, InAppWalletInterface, InAppWalletDoc, InAppWalletModel } from './user/models/wallet.model'
 
 import { MONGO_DB_URL } from '../../config'
 
@@ -21,22 +19,21 @@ mongoose.connection
 
 export const db = {
 	mongoose,
-	// email db
-	RenderverseEmails,
-
 	// User Modals
-	User, UserWallet,
+	UserModel, InAppWalletModel
+}
+
+export const classes = {
+	User,
+	InAppWallet
 }
 
 export {
 	// User Types
-	UserType, UserWalletType,
+	UserInterface, InAppWalletInterface,
 }
 
 export {
-	// Renderverse Emails
-	RenderverseEmailsDocument,
-
 	// User Docs
-	UserDocument, UserWalletDocument,
+	UserDoc, InAppWalletDoc,
 }

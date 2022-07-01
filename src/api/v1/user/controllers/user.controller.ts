@@ -4,6 +4,8 @@ import { EmailSender } from '../../utils/email'
 import { HttpFactory } from '../../http/http_factory';
 import { JWT } from '../../utils/jwt';
 import { ErrorTypes } from '../../errors/error_types';
+import { Required } from '../../utils/required'
+import { UserInterface } from '../models/user.model';
 
 export class UserController {
 
@@ -12,7 +14,13 @@ export class UserController {
 	// @access public
 	static createUser = async (req: Request, res: Response) => {
 		try {
-			const { username, email, password } = req.body;
+
+			const { username, email, password } = new Required(req.body)
+				.addKey("username")
+				.addKey("email")
+				.addKey("password")
+				.getItems() as UserInterface;
+
 			const isExists = await UserServices.isUserAlreadyExists(username, email)
 			if (isExists) {
 				const response = {
