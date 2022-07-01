@@ -1,12 +1,11 @@
 import { Request, Response } from 'express';
 import { UserServices } from '../services/user.service'
 import { EmailSender } from '../../utils/email'
-import { HttpResponseFactory } from '../../http/http_factory';
+import { HttpFactory } from '../../http/http_factory';
 import { JWT } from '../../utils/jwt';
-import { ErrorTypes } from '../../errors/db.errors';
+import { ErrorTypes } from '../../errors/error_types';
 
 export class UserController {
-
 
 	// @desc creating new user
 	// @route /backend/v1/users/register
@@ -20,7 +19,7 @@ export class UserController {
 					errorType: "USER_ALREADY_EXIST", message: "Username or Email already in use",
 					error: true,
 				}
-				return HttpResponseFactory.OK({ data: { ...response }, res: res })
+				return HttpFactory.STATUS_200_OK(response, res)
 			}
 			const token: string = UserServices.createToken();
 			const hash = await UserServices.hashPassword(password)
@@ -31,9 +30,9 @@ export class UserController {
 			await EmailSender.sendMail("contact@renderverse.io", email, "Welcome to Renderplay, Please Verify Your Email", "", html.toString());
 			console.log("sent verification email")
 			const response = { message: "Successfully created", errorType: "NONE", error: false };
-			return HttpResponseFactory.OK({ data: { ...response }, res: res })
+			return HttpFactory.STATUS_200_OK(response, res)
 		} catch (err) {
-			return HttpResponseFactory.INTERNAL_SERVER_ERROR({ data: { message: err }, res: res })
+			return HttpFactory.STATUS_500_INTERNAL_SERVER_ERROR(err, res)
 		}
 	};
 
@@ -52,12 +51,12 @@ export class UserController {
 						const response = {
 							error: true, message: "It's not a google account, SignIn with Email & Password", errorType: "UNAUTHORIZED_ACCESS"
 						}
-						return HttpResponseFactory.OK({ data: { ...response }, res: res })
+						return HttpFactory.STATUS_200_OK(response, res)
 					}
 
 					const token: string = JWT.generateJWTToken(user?._id);
 					const response = { error: false, errorType: "NONE", username: username, accessToken: token }
-					return HttpResponseFactory.OK({ data: { ...response }, res: res })
+					return HttpFactory.STATUS_200_OK(response, res)
 				}
 				const { _id }: any = await UserServices.createUser(username, email, "", "", true)
 				UserServices.createWalletForUser(_id)
@@ -65,7 +64,7 @@ export class UserController {
 				console.log(username)
 				return { error: false, errorType: "NONE", username: username, accessToken: token, };
 			} catch (err) {
-				return HttpResponseFactory.INTERNAL_SERVER_ERROR({ data: { message: err }, res: res })
+				return HttpFactory.STATUS_500_INTERNAL_SERVER_ERROR(err, res)
 			}
 		}
 	}
@@ -95,7 +94,7 @@ export class UserController {
 					message: "Sign in with Google",
 					errorType: "UNAUTHORIZED_ACCESS"
 				}
-				return HttpResponseFactory.OK({ data: { ...response }, res: res })
+				return HttpFactory.STATUS_200_OK(response, res)
 			}
 
 			const authorized = await UserServices.verifyPassword(password, user?.password)
@@ -105,7 +104,7 @@ export class UserController {
 					message: "invalid username or password",
 					errorType: "INVALID_CRENDENTAILS",
 				}
-				return HttpResponseFactory.OK({ data: { ...response }, res: res })
+				return HttpFactory.STATUS_200_OK(response, res)
 			}
 
 			if (!user?.isVerified) {
@@ -114,21 +113,21 @@ export class UserController {
 					message: "verify email, to login",
 					errorType: "UNAUTHORIZED_EMAIL"
 				}
-				return HttpResponseFactory.OK({ data: { ...response }, res: res })
+				return HttpFactory.STATUS_200_OK(response, res)
 			}
 
 			const token: string = JWT.generateJWTToken(user?._id);
 			const response = { error: false, accessToken: token, username: username, errorType: 'NONE' }
-			return HttpResponseFactory.OK({ data: { ...response }, res: res })
+			return HttpFactory.STATUS_200_OK(response, res)
 		} catch (err: any) {
 			if (err.name === ErrorTypes.OBJECT_NOT_FOUND_ERROR) {
 				const response = {
 					errorType: "INVALID_CREDENTIALS", message: "username or email does not exists",
 					error: true
 				}
-				return HttpResponseFactory.OK({ data: { ...response }, res: res })
+				return HttpFactory.STATUS_200_OK(response, res)
 			}
-			return HttpResponseFactory.INTERNAL_SERVER_ERROR({ data: {}, res: res })
+			return HttpFactory.STATUS_500_INTERNAL_SERVER_ERROR({}, res)
 		}
 	};
 
@@ -143,9 +142,10 @@ export class UserController {
 			console.log("sending forgot password email to - " + email)
 			await EmailSender.sendMail("contact@renderverse.io", email, "Password Change", "", html.toString());
 			console.log("sent forgot password email")
-			return HttpResponseFactory.CREATED({ data: { isEmailSend: true }, res: res })
+			return HttpFactory.STATUS_200_OK({ isEmailSend: true }, res)
 		} catch (err) {
-			return HttpResponseFactory.INTERNAL_SERVER_ERROR({ data: { isEmailSend: false, message: "user does not exists" }, res: res })
+			const e = { isEmailSend: false, message: "user does not exists" }
+			return HttpFactory.STATUS_500_INTERNAL_SERVER_ERROR(e, res)
 		}
 	};
 
@@ -158,9 +158,10 @@ export class UserController {
 			const { token } = req.params;
 			const isVerified = await UserServices.isValidToken(token)
 			await UserServices.setIsVerified(token, isVerified);
-			return HttpResponseFactory.OK({ data: { isVerified: isVerified }, res: res })
+			return HttpFactory.STATUS_200_OK({ isVerified: isVerified }, res)
 		} catch (err) {
-			return HttpResponseFactory.INTERNAL_SERVER_ERROR({ data: { isVerified: false, message: "user does not exists" }, res: res })
+			const e = { isVerified: false, message: "user does not exists" };
+			return HttpFactory.STATUS_500_INTERNAL_SERVER_ERROR(e, res)
 		}
 	}
 
@@ -177,11 +178,11 @@ export class UserController {
 				const hash = await UserServices.hashPassword(password)
 				await UserServices.setPassword(token, hash)
 				await UserServices.updateToken(token)
-				return HttpResponseFactory.OK({ data: { isPasswordChanged: true }, res: res })
+				return HttpFactory.STATUS_200_OK({ isPasswordChanged: true }, res)
 			}
-			return HttpResponseFactory.OK({ data: { isPasswordChanged: false }, res: res })
+			return HttpFactory.STATUS_200_OK({ isPasswordChanged: false }, res)
 		} catch (err) {
-			return HttpResponseFactory.INTERNAL_SERVER_ERROR({ data: err, res: res })
+			return HttpFactory.STATUS_500_INTERNAL_SERVER_ERROR(err, res)
 		}
 	}
 

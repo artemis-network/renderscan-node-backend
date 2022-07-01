@@ -1,31 +1,39 @@
 import { HTTP_STATUS } from './http_status'
-import { Response } from 'express'
 
-interface HttpResponse { data: any, res: Response }
+import { Response } from "express";
+import { HttpResponseEntityBuilder } from './http_entity_buildter'
 
-export class HttpResponseFactory {
-	static resp(status: HTTP_STATUS, data: any, res: Response) {
-		return res.status(status).json({ ...data, })
+export class HttpFactory {
+	static STATUS_404_NOT_FOUND(data: any, responseEntity: Response) {
+		return new HttpResponseEntityBuilder({})
+			.setData(data)
+			.setResponseEntity(responseEntity)
+			.setStatus(HTTP_STATUS.NOT_FOUND)
+			.getResponseEntity();
 	}
 
-	static OK(http: HttpResponse) {
-		return this.resp(HTTP_STATUS.OK, http.data, http.res);
+	static STATUS_200_OK(data: any, responseEntity: Response) {
+		return new HttpResponseEntityBuilder({})
+			.setData(data)
+			.setResponseEntity(responseEntity)
+			.setStatus(HTTP_STATUS.OK)
+			.getResponseEntity();
 	}
 
-	static CREATED(http: HttpResponse) {
-		return this.resp(HTTP_STATUS.CREATED, http.data, http.res);
+	static STATUS_500_INTERNAL_SERVER_ERROR(data: any, responseEntity: Response) {
+		return new HttpResponseEntityBuilder({})
+			.setData(data)
+			.setResponseEntity(responseEntity)
+			.setStatus(HTTP_STATUS.INTERNAL_SERVER_ERROR)
+			.getResponseEntity();
 	}
 
 
-	static NOT_FOUND(http: HttpResponse) {
-		return this.resp(HTTP_STATUS.NOT_FOUND, http.data, http.res);
-	}
-
-	static INTERNAL_SERVER_ERROR(http: HttpResponse) {
-		return this.resp(HTTP_STATUS.INTERNAL_SERVER_ERROR, http.data, http.res);
-	}
-
-	static NOT_ACCEPTABLE(http: HttpResponse) {
-		return this.resp(HTTP_STATUS.NOT_ACCEPTABLE, http.data, http.res);
+	static STATUS_400_BAD_REQUEST(data: any, responseEntity: Response) {
+		return new HttpResponseEntityBuilder({})
+			.setData(data)
+			.setResponseEntity(responseEntity)
+			.setStatus(HTTP_STATUS.BAD_REQUEST)
+			.getResponseEntity();
 	}
 }

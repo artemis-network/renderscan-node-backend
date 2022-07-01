@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { HttpResponseFactory } from '../../http/http_factory';
+import { HttpFactory } from '../../http/http_factory';
 import { ImageServices } from '../services/image.services'
 
 
@@ -20,11 +20,11 @@ export class ImageController {
 						files.push(ImageServices.constructUrl(obj.Key))
 					})
 				}
-				return HttpResponseFactory.OK({ data: { images: files }, res: res })
+				return HttpFactory.OK({ data: { images: files }, res: res })
 			});
 
 		} catch (e) {
-			return HttpResponseFactory.INTERNAL_SERVER_ERROR({ data: { message: e }, res: res })
+			return HttpFactory.INTERNAL_SERVER_ERROR({ data: { message: e }, res: res })
 		}
 	}
 
@@ -32,10 +32,10 @@ export class ImageController {
 		try {
 			const { filename, username } = req.body
 			const isDeleted: boolean = ImageServices.deleteUserFiles(filename, username)
-			return HttpResponseFactory.OK({ data: { isDeleted: isDeleted }, res: res })
+			return HttpFactory.OK({ data: { isDeleted: isDeleted }, res: res })
 
 		} catch (e) {
-			return HttpResponseFactory.INTERNAL_SERVER_ERROR({ data: { message: e }, res: res })
+			return HttpFactory.INTERNAL_SERVER_ERROR({ data: { message: e }, res: res })
 		}
 	}
 
@@ -51,27 +51,27 @@ export class ImageController {
 				else {
 					ImageServices.deleteUserFiles(filename, username)
 				}
-				return HttpResponseFactory.OK({ data: { isUploaded: true }, res: res });
+				return HttpFactory.OK({ data: { isUploaded: true }, res: res });
 			})
 
 		} catch (e) {
-			return HttpResponseFactory.INTERNAL_SERVER_ERROR({ data: { message: e }, res: res })
+			return HttpFactory.INTERNAL_SERVER_ERROR({ data: { message: e }, res: res })
 		}
 
 	}
 
 	static cutImage = async (req: Request, res: Response) => {
 		if (!req.file)
-			return HttpResponseFactory.INTERNAL_SERVER_ERROR({ data: { message: "empty image" }, res: res })
+			return HttpFactory.INTERNAL_SERVER_ERROR({ data: { message: "empty image" }, res: res })
 
 		const { username } = req.body
 		console.log("username - " + username)
 		const filePath = req.file.path
 		try {
-			const {currentCutFileName, respImg }:any = await ImageServices.cutImageService(username, filePath)
-			return HttpResponseFactory.OK({ data: { filename: currentCutFileName, file: respImg }, res: res });
+			const { currentCutFileName, respImg }: any = await ImageServices.cutImageService(username, filePath)
+			return HttpFactory.OK({ data: { filename: currentCutFileName, file: respImg }, res: res });
 		} catch (e) {
-			return HttpResponseFactory.INTERNAL_SERVER_ERROR({ data: { message: e }, res: res })
+			return HttpFactory.INTERNAL_SERVER_ERROR({ data: { message: e }, res: res })
 		}
 
 	}

@@ -83,8 +83,8 @@ export class ImageServices {
         if (!fs.existsSync(IMAGE_CREDS.localImageFolderPath)) {
             fs.mkdirSync(IMAGE_CREDS.localImageFolderPath);
         }
-        if (!fs.existsSync(path.join(IMAGE_CREDS.localImageFolderPath,username))) {
-            fs.mkdirSync(path.join(IMAGE_CREDS.localImageFolderPath,username));
+        if (!fs.existsSync(path.join(IMAGE_CREDS.localImageFolderPath, username))) {
+            fs.mkdirSync(path.join(IMAGE_CREDS.localImageFolderPath, username));
         }
 
         const currTime = new Date().toISOString().replace(/T/, '_').replace(/\..+/, '').replace(':', '_').replace(':', '_')
@@ -118,7 +118,7 @@ export class ImageServices {
             },
             data: data
         };
-        
+
         const resp = await axios(requestConfig)
             .then(function (response) {
                 return response
@@ -136,16 +136,17 @@ export class ImageServices {
             console.log(' > opening mask...')
             if (mask) {
                 mask = mask.grayscale().resize(iWidth, iHeight, Jimp.RESIZE_BICUBIC)
+                mask = mask.rotate(270)
                 mask.writeAsync(cutMaskFilePath)
                 console.log(' > compositing final image...')
                 const ref = await Jimp.read(cutReceivedFilePath)
-                const empty = new Jimp(iWidth,iHeight)
+                const empty = new Jimp(iWidth, iHeight)
                 const composite = ref.mask(mask, 0, 0)
                 const scaled = composite.resize(composite.bitmap.width * 3, composite.bitmap.height * 3, Jimp.RESIZE_BICUBIC)
                 scaled.writeAsync(currentCutFilePath)
-                const respImg = await scaled.getBase64Async(scaled.getMIME())  
-                this.deleteTempFiles(currTime)
-                return {currentCutFileName, respImg}
+                const respImg = await scaled.getBase64Async(scaled.getMIME())
+                // this.deleteTempFiles(currTime)
+                return { currentCutFileName, respImg }
             }
         }
         return

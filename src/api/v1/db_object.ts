@@ -1,4 +1,4 @@
-import { DBErrors } from './errors/db.errors'
+import { ErrorFactory } from './errors/error_factory'
 
 export class DBObject {
 
@@ -8,9 +8,9 @@ export class DBObject {
 
 	get(): any {
 		if (this.object === null)
-			return DBErrors.OBJECT_NOT_FOUND("object does not exist")
+			throw ErrorFactory.OBJECT_NOT_FOUND("object not found")
 		if (this.object === undefined)
-			return DBErrors.OBJECT_UN_DEFINED("object undefined")
+			throw ErrorFactory.OBJECT_UN_DEFINED("object undefined")
 		return this.object
 	}
 
