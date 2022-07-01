@@ -12,7 +12,7 @@ def getCompositeImage(inputFile, maskFile, outputFile):
             )
         img = Image.composite(ref, empty, mask)
         img_scaled = img.resize((img.size[0] * 3, img.size[1] * 3))
-        img_scaled = img_scaled.rotate(270)
+        img_scaled = img_scaled.rotate(180)
         img_scaled.save(outputFile)
         return True
     except Exception as e:

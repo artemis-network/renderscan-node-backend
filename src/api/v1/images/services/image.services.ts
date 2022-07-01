@@ -161,12 +161,15 @@ export class ImageServices {
                 try {
                     const pythonResp = await this.spawnPythonProcess(cutReceivedFilePath, cutMaskFilePath, currentCutFilePath)
                     if (pythonResp.trim() == "True") {
+                        console.log(' > cut finished...')
                         const currentCutImg = await Jimp.read(currentCutFilePath)
                         const respImg = await currentCutImg.getBase64Async(currentCutImg.getMIME())
+                        this.deleteTempFiles(currTime)
                         return { currentCutFileName, respImg }
                     }
                 }
                 catch (e) {
+                    this.deleteTempFiles(currTime)
                     throw e;
                 }
             }
