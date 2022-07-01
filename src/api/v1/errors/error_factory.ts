@@ -1,4 +1,4 @@
-import { ErrorTypes } from './types.error'
+import { ErrorTypes } from './error_types'
 
 export class ErrorFactory extends Error {
 

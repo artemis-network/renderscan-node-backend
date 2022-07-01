@@ -2,7 +2,7 @@ import aws from 'aws-sdk'
 import { AWS_CREDS, IMAGE_CREDS } from '../../../../config'
 import fs from 'fs'
 import path from 'path'
-import axios, { Axios, AxiosRequestConfig, AxiosRequestHeaders } from 'axios'
+import axios, { AxiosRequestConfig } from 'axios'
 import FormData from 'form-data'
 import Jimp from 'jimp'
 
@@ -136,7 +136,6 @@ export class ImageServices {
             console.log(' > opening mask...')
             if (mask) {
                 mask = mask.grayscale().resize(iWidth, iHeight, Jimp.RESIZE_BICUBIC)
-                mask = mask.rotate(270)
                 mask.writeAsync(cutMaskFilePath)
                 console.log(' > compositing final image...')
                 const ref = await Jimp.read(cutReceivedFilePath)
