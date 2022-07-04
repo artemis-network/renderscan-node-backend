@@ -1,4 +1,4 @@
-const parentPrefix = "/backend/v1"
+const parentPrefix = "/renderscan/v1"
 
 const userPrefix = parentPrefix + "/users"
 const walletPrefix = parentPrefix + "/wallets"
