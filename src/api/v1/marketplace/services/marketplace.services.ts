@@ -15,7 +15,8 @@ export class MarketplaceServices {
             }
             const browser = await puppeteer.launch({
                 headless: true,
-                args: ["--disable-setuid-sandbox"],
+		executablePath: '/usr/bin/google-chrome',
+                args: ["--no-sandbox"],
                 'ignoreHTTPSErrors': true
             });
             const page = await browser.newPage()
