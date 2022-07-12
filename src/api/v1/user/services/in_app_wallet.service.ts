@@ -1,12 +1,19 @@
-import { db, InAppWalletInterface } from "../../db"
-const { InAppWalletModel } = db
+import { db, InAppWalletInterface, classes } from "../../db"
+const { InAppWalletModel, TranscationModel } = db
 import { logger } from "../../utils/logger";
 import { ErrorFactory, Err, ErrorTypes } from "../../errors/error_factory";
 import { DBObject } from "../../db_object";
 
+import { PAYMENT_TYPE, Transaction, TransactionInterface } from '../models/transaction.model'
+const { RazorPay } = classes
+
 interface WalletDetails { error?: boolean, message?: string; balance?: number; }
 
 export class InAppWalletServices {
+
+	static createTranascation = async (transaction: TransactionInterface) => {
+		await TranscationModel.create(transaction);
+	}
 
 	static getInAppWallet = async (userId: string): Promise<WalletDetails> => {
 		try {

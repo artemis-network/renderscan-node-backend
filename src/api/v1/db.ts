@@ -3,7 +3,10 @@ import mongoose from 'mongoose';
 import { logger } from './utils/logger';
 
 import { User, UserInterface, UserDoc, UserModel } from './user/models/user.model'
-import { InAppWallet, InAppWalletInterface, InAppWalletDoc, InAppWalletModel, IN_APP_WALLET_NAMING } from './user/models/in_app_wallet.model'
+import { RazorPay, RazorPayInterface, RazorPayDoc, RazorPayModel, } from './user/models/razorpay.model';
+import { InAppWallet, InAppWalletInterface, InAppWalletDoc, InAppWalletModel, } from './user/models/in_app_wallet.model'
+import { Transaction, TransactionInterface, TransactionDoc, TranscationModel, PAYMENT_TYPE } from './user/models/transaction.model'
+
 
 import { MONGO_DB_URL } from '../../config'
 
@@ -20,22 +23,24 @@ mongoose.connection
 export const db = {
 	mongoose,
 	// User Modals
-	UserModel, InAppWalletModel
+	UserModel, InAppWalletModel, RazorPayModel, TranscationModel
 }
 
 export const RUBY_VALUE_PER_ONE_INR = 100;
 
 export const classes = {
 	User,
-	InAppWallet
+	RazorPay,
+	Transaction,
+	InAppWallet,
 }
 
 export {
 	// User Types
-	UserInterface, InAppWalletInterface,
+	UserInterface, InAppWalletInterface, RazorPayInterface, TransactionInterface
 }
 
 export {
 	// User Docs
-	UserDoc, InAppWalletDoc,
+	UserDoc, InAppWalletDoc, RazorPayDoc, TransactionDoc
 }

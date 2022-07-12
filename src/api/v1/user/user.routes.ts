@@ -8,8 +8,9 @@ import { authorizeUserMiddleWare } from '../middlewares/jwtTokenAuthenticator.mi
 import { UserController } from './controllers/user.controller'
 import { InAppWalletController } from './controllers/in_app_wallet.controller'
 
-import { userPrefix, walletPrefix } from '../config'
+import { orderPrefix, userPrefix, walletPrefix } from '../config'
 import { UserBootStartController } from './controllers/user_init.controller';
+
 
 router.post(`${userPrefix}/init`, UserBootStartController.initialize);
 router.post(`${userPrefix}/login`, UserController.loginUser);
@@ -27,5 +28,9 @@ router.get(`${userPrefix}/test-token`, authorizeUserMiddleWare, (req, res) => re
 
 router.post(`${walletPrefix}`, InAppWalletController.getWallet)
 router.post(`${walletPrefix}/deposit`, InAppWalletController.depositFunds)
+
+
+router.post(`${orderPrefix}/create`, InAppWalletController.createOrder)
+router.post(`${orderPrefix}/complete`, InAppWalletController.completeOrder)
 
 export { router as userRoutes }

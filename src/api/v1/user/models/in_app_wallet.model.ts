@@ -14,10 +14,6 @@ export const IN_APP_WALLET_NAMING: string = 'IN_APP_WALLET';
 export class InAppWallet {
 	wallet: InAppWalletInterface;
 	constructor(wallet: InAppWalletInterface) { this.wallet = wallet }
-	setBalance(balance: InAppWalletInterface["balance"]) {
-		this.wallet.balance = balance
-		return this;
-	}
 	setIsActive(isActivate: InAppWalletInterface["isActive"]) {
 		this.wallet.isActive = isActivate
 		return this;
