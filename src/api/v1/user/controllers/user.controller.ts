@@ -24,8 +24,9 @@ export class UserController {
 			console.log(isExists)
 			if (isExists) {
 				const response = {
-					errorType: "USER_ALREADY_EXIST", message: "Username or Email already in use",
 					error: true,
+					errorType: "USER_ALREADY_EXIST",
+					message: "Username or Email already in use",
 				}
 				return HttpFactory.STATUS_200_OK(response, res)
 			}
@@ -35,7 +36,13 @@ export class UserController {
 			await UserServices.createWalletForUser(newUser?._id)
 			const html: string = EmailSender.getEmailVerificationHTML(token);
 			console.log("sending verification email to - " + email)
-			await EmailSender.sendMail("contact@renderverse.io", email, "Welcome to Renderplay, Please Verify Your Email", "", html.toString());
+			await EmailSender.sendMail(
+				"contact@renderverse.io",
+				email,
+				"Welcome to Renderplay, Please Verify Your Email",
+				"",
+				html.toString()
+			);
 			console.log("sent verification email")
 			const response = { message: "Successfully created", errorType: "NONE", error: false };
 			return HttpFactory.STATUS_200_OK(response, res)

@@ -1,14 +1,15 @@
 import mongoose, { Schema, Model, Document } from 'mongoose';
-import { UserInterface } from './user.model'
+import { UserInterface, USER_NAMING } from './user.model'
 
 export interface InAppWalletInterface { balance: number; isActive: Boolean; user: UserInterface | string }
 export interface InAppWalletDoc extends InAppWalletInterface, Document { }
 
 const inAppWalletSchema = new Schema({
-	balance: { type: Schema.Types.Number, required: true, default: 5000 },
+	user: { type: Schema.Types.ObjectId, ref: USER_NAMING },
 	isActive: { type: Schema.Types.Boolean, required: true, },
-	user: { type: Schema.Types.ObjectId, ref: 'User' }
 });
+
+export const IN_APP_WALLET_NAMING: string = 'IN_APP_WALLET';
 
 export class InAppWallet {
 	wallet: InAppWalletInterface;
@@ -31,4 +32,4 @@ export class InAppWallet {
 }
 
 export const InAppWalletModel: Model<InAppWalletDoc> = mongoose
-	.model<InAppWalletDoc>('IN_APP_WALLET', inAppWalletSchema);
+	.model<InAppWalletDoc>(IN_APP_WALLET_NAMING, inAppWalletSchema);

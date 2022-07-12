@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 import { logger } from './utils/logger';
 
 import { User, UserInterface, UserDoc, UserModel } from './user/models/user.model'
-import { InAppWallet, InAppWalletInterface, InAppWalletDoc, InAppWalletModel } from './user/models/wallet.model'
+import { InAppWallet, InAppWalletInterface, InAppWalletDoc, InAppWalletModel, IN_APP_WALLET_NAMING } from './user/models/in_app_wallet.model'
 
 import { MONGO_DB_URL } from '../../config'
 
@@ -22,6 +22,8 @@ export const db = {
 	// User Modals
 	UserModel, InAppWalletModel
 }
+
+export const RUBY_VALUE_PER_ONE_INR = 100;
 
 export const classes = {
 	User,
