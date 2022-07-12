@@ -31,6 +31,7 @@ const IMAGE_CREDS = {
 }
 
 const API_ADMIN_PASSWORD = process.env.API_ADMIN_PASSWORD || ""
+const USER_AGENT = process.env.USER_AGENT || ""
 
 export {
 	PORT,
@@ -41,5 +42,6 @@ export {
 	API_ADMIN_PASSWORD,
 	GOOGLE_OAUTH_CLIENT,
 	AWS_CREDS,
-	IMAGE_CREDS
+	IMAGE_CREDS,
+	USER_AGENT
 }

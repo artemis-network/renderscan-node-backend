@@ -9,6 +9,7 @@ import { logger } from './api/v1/utils/logger';
 import { pingRoutes } from './api/v1/main.route';
 import { userRoutes } from './api/v1/user/user.routes'
 import { imageRoutes } from './api/v1/images/images.routes'
+import { marketplaceRoutes } from './api/v1/marketplace/marketplace.routes'
 
 import bodyParser from 'body-parser';
 
@@ -26,5 +27,6 @@ app.get('/', (req, res) => res.send("🚀  WELCOME TO RENDERVERSE"))
 app.use(pingRoutes);
 app.use(userRoutes);
 app.use(imageRoutes);
+app.use(marketplaceRoutes);
 
 app.listen(PORT, () => init());
