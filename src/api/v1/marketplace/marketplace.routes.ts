@@ -14,8 +14,12 @@ import { MarketplaceController } from './controllers/marketplace.controller';
 import { marketplacePrefix } from '../config'
 
 
-router.post(`${marketplacePrefix}/trendingcollections`, MarketplaceController.getTrendingCollections);
+router.post(`${marketplacePrefix}/gettrendingcollections`, MarketplaceController.getTrendingCollections);
+router.post(`${marketplacePrefix}/updatetrendingcollections`, upload.single('data'), MarketplaceController.updateTrendingCollections);
 router.post(`${marketplacePrefix}/collectioninfofromslug`, MarketplaceController.getCollectionInfoFromSlug);
 router.post(`${marketplacePrefix}/collectionnftsfromslug`, MarketplaceController.getCollectionNFTsFromSlug);
+router.post(`${marketplacePrefix}/getshowcasenfts`, MarketplaceController.getShowcaseNFTs);
+router.post(`${marketplacePrefix}/getnotablecollections`, MarketplaceController.getNotableCollectionInfo);
+
 
 export { router as marketplaceRoutes }
