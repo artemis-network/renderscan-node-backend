@@ -58,4 +58,6 @@ export class User {
   }
 }
 
-export const UserModel: Model<UserDoc> = mongoose.model<UserDoc>("USER", userSchema);
+export const USER_NAMING: string = "USER";
+
+export const UserModel: Model<UserDoc> = mongoose.model<UserDoc>(USER_NAMING, userSchema);

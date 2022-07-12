@@ -1,15 +1,19 @@
 import { ErrorTypes } from './error_types'
 
-export class ErrorFactory extends Error {
+export interface Err { message: string; name: ErrorTypes; }
 
-	static OBJECT_NOT_FOUND(message: string) {
+export { ErrorTypes };
+
+export class ErrorFactory {
+
+	static OBJECT_NOT_FOUND(message: string): Err {
 		throw {
 			message: message,
 			name: ErrorTypes.OBJECT_NOT_FOUND_ERROR.toString(),
 		}
 	}
 
-	static OBJECT_UN_DEFINED(message: string) {
+	static OBJECT_UN_DEFINED(message: string): Err {
 		throw {
 			message: message,
 			name: ErrorTypes.OBJECT_UN_DEFINED_ERROR.toString(),
@@ -29,5 +33,4 @@ export class ErrorFactory extends Error {
 			name: ErrorTypes.OBJECT_UN_DEFINED_ERROR.toString(),
 		}
 	}
-
 }
