@@ -5,6 +5,7 @@ const { RazorPayModel } = db
 import { Razorpay as RP } from 'razorpay-typescript'
 import { Err, ErrorFactory, ErrorTypes } from '../../errors/error_factory'
 import { DBObject } from '../../db_object'
+import { PAYMENT, PAYMENT_TYPE, TransactionInterface, TranscationModel } from '../models/transaction.model'
 
 const instance = new RP({
 	authKey: { key_id: 'rzp_test_VmSch4maQMZS9L', key_secret: 'V18z4EipVdrQ9F7UK6Qokx2O' },
@@ -57,6 +58,55 @@ export class RazorPayServices {
 			if (err.name === ErrorTypes.OBJECT_NOT_FOUND_ERROR ||
 				err.name === ErrorTypes.OBJECT_UN_DEFINED_ERROR) {
 				throw ErrorFactory.OBJECT_NOT_FOUND("object does not exist");
+			}
+		}
+	}
+
+	static getTranscations = async (walletId: string) => {
+		return await TranscationModel.find().where({ walletId: walletId }) as TransactionInterface[];
+	}
+
+	static getBalanceFromWalletId = async (walletId: string) => {
+		try {
+			const transcations = await TranscationModel.find().where({ walletId: walletId }) as TransactionInterface[];
+
+			let normalRubyDebits = 0
+			let normalRubyCredits = 0
+
+			let rewardDebits = 0
+			let rewardCredits = 0
+
+			transcations.forEach(({ amount, payment, paymentType, walletId }) => {
+				console.log(amount, payment, paymentType, walletId)
+
+				if (payment === PAYMENT.CREDIT && paymentType === PAYMENT_TYPE.RAZOR_PAY) {
+					normalRubyCredits += amount ?? 0
+				}
+				if (payment === PAYMENT.DEBIT && paymentType === PAYMENT_TYPE.RAZOR_PAY) {
+					normalRubyDebits += amount ?? 0
+				}
+
+				if (payment === PAYMENT.CREDIT && paymentType === PAYMENT_TYPE.REWARD) {
+					rewardCredits += amount ?? 0
+				}
+				if (payment === PAYMENT.DEBIT && paymentType === PAYMENT_TYPE.REWARD) {
+					rewardDebits += amount ?? 0
+				}
+			});
+
+			console.log(transcations)
+
+			const ruby = normalRubyCredits - normalRubyDebits
+			const rewards = rewardCredits - rewardDebits
+			return {
+				ruby: rewards,
+				superRuby: ruby
+			}
+
+		} catch (error) {
+			return {
+				ruby: 0,
+				superRuby: 0
 			}
 		}
 	}

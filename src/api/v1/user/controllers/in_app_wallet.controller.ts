@@ -42,9 +42,29 @@ export class InAppWalletController {
 	static getBalance = async (req: Request, res: Response) => {
 		try {
 			const { userId } = req.body
-			const { walletId } = InAppWalletServices.getWallet(userId) as any;
+			console.log(req.body)
+			const { walletId } = await InAppWalletServices.getWallet(userId) as any;
+			const resp = await RazorPayServices.getBalanceFromWalletId(walletId);
+			return HttpFactory.STATUS_200_OK(resp, res);
+		} catch (error) {
+			const err = error as Err;
+			if (err.name === ErrorTypes.OBJECT_NOT_FOUND_ERROR ||
+				err.name === ErrorTypes.OBJECT_UN_DEFINED_ERROR) {
+				throw ErrorFactory.OBJECT_NOT_FOUND("object doesnot exists")
+			}
+		}
+	}
 
-
+	// @desc get get transactions 
+	// @route /renderscan/v1/wallets/transcations
+	// @access private
+	static getTranscations = async (req: Request, res: Response) => {
+		try {
+			const { userId } = req.body
+			console.log(req.body)
+			const { walletId } = await InAppWalletServices.getWallet(userId) as any;
+			const resp = await RazorPayServices.getTranscations(walletId);
+			return HttpFactory.STATUS_200_OK(resp, res);
 		} catch (error) {
 			const err = error as Err;
 			if (err.name === ErrorTypes.OBJECT_NOT_FOUND_ERROR ||
@@ -80,7 +100,6 @@ export class InAppWalletController {
 				.addKey("notes")
 				.addKey("currency")
 				.addKey("userId").getItems() as OrderInput;
-
 			try {
 				const resp = await RazorPayServices.createOrder({
 					amount: amount, currency: currency, receipt: recepit, notes:
@@ -125,7 +144,7 @@ export class InAppWalletController {
 				.addKey("userId").getItems() as OrderInput;
 
 			const razorPay = new DBObject(
-				RazorPayServices.updateAndGetTranscationByOrderId(id, paymentId, signature)
+				await RazorPayServices.updateAndGetTranscationByOrderId(id, paymentId, signature)
 			).get()
 
 			const { walletId } = await InAppWalletServices.getWallet(userId)
@@ -139,9 +158,11 @@ export class InAppWalletController {
 				.setPayment(PAYMENT.CREDIT)
 				.get() as TransactionInterface;
 
+
 			await InAppWalletServices.createTranascation(transcation);
 			return HttpFactory.STATUS_200_OK({ message: "Transcation successfully" }, res)
 		} catch (e) {
+			console.log(e)
 			const err = e as Err;
 			if (err.name === ErrorTypes.OBJECT_NOT_FOUND_ERROR || err.name === ErrorTypes.OBJECT_UN_DEFINED_ERROR) {
 				return HttpFactory.STATUS_404_NOT_FOUND(err.message, res);
@@ -149,9 +170,6 @@ export class InAppWalletController {
 			if (err.name === ErrorTypes.TYPE_ERROR) {
 				return HttpFactory.STATUS_400_BAD_REQUEST(err.message, res);
 			}
-		}
-		finally {
-			return HttpFactory.STATUS_500_INTERNAL_SERVER_ERROR("something went wrong", res);
 		}
 	}
 
@@ -187,8 +205,6 @@ export class InAppWalletController {
 			if (err.name === ErrorTypes.OBJECT_NOT_FOUND_ERROR ||
 				err.name === ErrorTypes.OBJECT_UN_DEFINED_ERROR
 			) return HttpFactory.STATUS_400_BAD_REQUEST("bad request", res)
-		} finally {
-			return HttpFactory.STATUS_500_INTERNAL_SERVER_ERROR("something went wrong", res)
 		}
 	}
 }

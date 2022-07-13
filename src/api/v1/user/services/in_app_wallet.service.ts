@@ -22,6 +22,7 @@ export class InAppWalletServices {
 	}
 
 
+
 	static getWallet = async (userId: string): Promise<{ walletId: string } | any> => {
 		try {
 			const query = await InAppWalletModel.findOne({ user: userId })

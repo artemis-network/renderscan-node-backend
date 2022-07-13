@@ -25,7 +25,7 @@ export class RewardService {
 				})
 			}
 		} catch (error) {
-
+			throw ErrorFactory.TYPE_ERROR("type error")
 		}
 	}
 }

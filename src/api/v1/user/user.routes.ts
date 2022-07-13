@@ -27,7 +27,8 @@ router.get(`${userPrefix}/test-token`, authorizeUserMiddleWare, (req, res) => re
 
 router.post(`${walletPrefix}`, InAppWalletController.getWallet)
 router.post(`${walletPrefix}/deposit`, InAppWalletController.depositFunds)
-
+router.post(`${walletPrefix}/balance`, InAppWalletController.getBalance)
+router.post(`${walletPrefix}/transcations`, InAppWalletController.getTranscations)
 
 router.post(`${orderPrefix}/create`, InAppWalletController.createOrder)
 router.post(`${orderPrefix}/complete`, InAppWalletController.completeOrder)
