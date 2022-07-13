@@ -1,9 +1,9 @@
 import bcrypt from 'bcrypt';
-import { OAuth2Client } from 'google-auth-library'
-import { JWT } from '../../utils/jwt';
-import { GOOGLE_OAUTH_CLIENT } from '../../../../config'
-
 import crypto from 'crypto';
+
+import { JWT } from '../../utils/jwt';
+import { OAuth2Client } from 'google-auth-library'
+import { GOOGLE_OAUTH_CLIENT } from '../../../../config'
 
 const client: any = new OAuth2Client(GOOGLE_OAUTH_CLIENT)
 
@@ -50,9 +50,12 @@ export class UserServices {
 	}
 
 	static setIsVerified = async (token: string, isVerified: boolean) => {
+		const crypto = require('crypto'), hash = crypto.getHashes();
+		let referalCode = crypto.createHash('sha1').update(token).digest('hex');
 		await UserModel.findOneAndUpdate({ token: token }, {
 			$set: {
-				isVerified: isVerified
+				isVerified: isVerified,
+				referalCode: referalCode
 			}
 		});
 	}
@@ -131,6 +134,7 @@ export class UserServices {
 			throw err;
 		}
 	}
+
 
 	static verifyPassword = async (password: string, hash: string) => bcrypt.compareSync(password, hash);
 

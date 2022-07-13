@@ -17,7 +17,6 @@ export class UserBootStartController {
 			const hash = await UserServices.hashPassword(ADMIN.password);
 			const user = await UserServices.createUser(ADMIN.username, ADMIN.email, hash, Role.ADMIN, false)
 			const details = await UserServices.createWalletForUser(user?._id);
-			console.log(details)
 			logger.info(">> successfully admin user")
 			return HttpFactory.STATUS_200_OK({ message: "OK" }, res)
 		}

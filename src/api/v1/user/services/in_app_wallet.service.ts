@@ -1,36 +1,56 @@
-import { db, InAppWalletInterface, classes } from "../../db"
-const { InAppWalletModel, TranscationModel } = db
+import { db, TransactionInterface } from "../../db"
 import { logger } from "../../utils/logger";
 import { ErrorFactory, Err, ErrorTypes } from "../../errors/error_factory";
 import { DBObject } from "../../db_object";
 
-import { PAYMENT_TYPE, Transaction, TransactionInterface } from '../models/transaction.model'
-const { RazorPay } = classes
+const { InAppWalletModel, TranscationModel } = db
 
-interface WalletDetails { error?: boolean, message?: string; balance?: number; }
+interface WalletDetails { error?: boolean, message?: string; balance?: number; _id?: string }
+interface Wallet {
+	walletId: string
+}
 
 export class InAppWalletServices {
 
 	static createTranascation = async (transaction: TransactionInterface) => {
-		await TranscationModel.create(transaction);
+		try {
+			await (await TranscationModel.create(transaction)).save();
+		} catch (e) {
+			const err = e as Err;
+			throw ErrorFactory.TYPE_ERROR(err.message);
+		}
+	}
+
+
+	static getWallet = async (userId: string): Promise<{ walletId: string } | any> => {
+		try {
+			const query = await InAppWalletModel.findOne({ user: userId })
+			const object = new DBObject(query).get();
+			return { walletId: object._id };
+		} catch (e) {
+			const err = e as Err;
+			if (err.name === ErrorTypes.OBJECT_NOT_FOUND_ERROR ||
+				err.name === ErrorTypes.OBJECT_UN_DEFINED_ERROR
+			) throw ErrorFactory.OBJECT_NOT_FOUND("object not found")
+		}
 	}
 
 	static getInAppWallet = async (userId: string): Promise<WalletDetails> => {
 		try {
 			const query = await InAppWalletModel.findOne({ user: userId })
 			const object = new DBObject(query);
-			const wallet = object.get() as InAppWalletInterface
-			return { error: false, message: "ok", balance: wallet?.balance }
+			const wallet = object.get()
+			return { error: false, message: "ok", balance: wallet?.balance, _id: wallet._id }
 		} catch (e) {
 			const err = e as Err;
-			if (err.name === ErrorTypes.OBJECT_NOT_FOUND_ERROR) {
+			if (err.name === ErrorTypes.OBJECT_NOT_FOUND_ERROR ||
+				err.name === ErrorTypes.OBJECT_UN_DEFINED_ERROR
+			) {
 				return { error: false, message: "ok", balance: 0 }
 			}
-			if (err.name === ErrorTypes.OBJECT_UN_DEFINED_ERROR) {
-				return { error: false, message: "ok", balance: 0 }
-			}
+		} finally {
+			return { error: false, message: "ok", balance: 0 };
 		}
-		return { error: false, message: "ok", balance: 0 };
 	}
 
 	static depositFunds = async (userId: string, amount: number): Promise<any> => {

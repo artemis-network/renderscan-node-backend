@@ -10,15 +10,15 @@ export interface RazorPayInterface {
 export interface RazorPayDoc extends RazorPayInterface, Document { }
 
 const razorPaySchema = new Schema({
-	userId: { unique: true, type: Schema.Types.ObjectId, required: true, ref: USER_NAMING },
-	orderId: { unique: true, type: Schema.Types.String, required: true },
+	userId: { type: Schema.Types.ObjectId, required: true, ref: USER_NAMING },
+	orderId: { type: Schema.Types.String, required: true },
 	createdAt: { type: Schema.Types.String, required: true },
 	status: { type: Schema.Types.String, required: true },
 	description: { type: Schema.Types.String, required: true },
 	notes: { type: Schema.Types.String, required: true },
 	amount: { type: Schema.Types.Number, required: true },
-	paymentId: { unique: true, type: Schema.Types.String },
-	signature: { unique: true, type: Schema.Types.String },
+	paymentId: { type: Schema.Types.String },
+	signature: { type: Schema.Types.String },
 });
 
 export class RazorPay {

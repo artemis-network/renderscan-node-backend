@@ -3,6 +3,7 @@ import mongoose, { Schema, Model, Document } from 'mongoose';
 export interface UserInterface {
   username: string; email: string; password: string; isGoogleAccount: Boolean,
   isVerified: Boolean, isActivated: Boolean, token: string, userType: string
+  referalCode: string;
 }
 
 export interface UserDoc extends UserInterface, Document { }
@@ -15,7 +16,8 @@ const userSchema = new Schema({
   isVerified: { type: Schema.Types.Boolean, required: true },
   isActivated: { type: Schema.Types.Boolean, required: true },
   token: { type: Schema.Types.String, },
-  userType: { type: Schema.Types.String, enum: ['ADMIN', 'USER', 'GUEST'], default: 'USER' }
+  userType: { type: Schema.Types.String, enum: ['ADMIN', 'USER', 'GUEST'], default: 'USER' },
+  referalCode: { type: Schema.Types.String, requird: true }
 });
 
 export class User {
@@ -51,6 +53,10 @@ export class User {
   }
   setUserType(userType: UserInterface["userType"]) {
     this.user.userType = userType;
+    return this;
+  }
+  setReferalCode(referalCode: UserInterface["referalCode"]) {
+    this.user.referalCode = referalCode;
     return this;
   }
   get() {

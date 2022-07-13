@@ -1,37 +1,35 @@
 import mongoose, { Schema, Model, Document } from 'mongoose';
 import { USER_NAMING } from './user.model'
 
-export interface ReferalsInterface {
-	referals: string[];
+export interface ReferalInterface {
+	referal: string[];
 	user: string
 }
-export interface ReferalsDoc extends ReferalsInterface, Document { }
+export interface ReferalDoc extends ReferalInterface, Document { }
 
-const referalSchema = new Schema({
+const referalchema = new Schema({
 	user: { type: Schema.Types.ObjectId, ref: USER_NAMING },
-	// referals: [{
-	// 	type: Schema.Types.ObjectId, ref: USER_NAMING
-	// }]
+	referal: [{
+		type: Schema.Types.ObjectId, ref: USER_NAMING
+	}]
 });
 
-export const REFERALS: string = 'REFERALS';
+export const REFERAL: string = 'REFERAL';
 
-export class Referals {
-	referals: ReferalsInterface;
-	constructor(referals: ReferalsInterface) { this.referals = referals }
+export class Referal {
+	referal: ReferalInterface;
+	constructor(referal: ReferalInterface) { this.referal = referal }
 
-	setReferals(referals: ReferalsInterface["referals"]) {
-		this.referals.referals = referals
+	setReferal(referal: ReferalInterface["referal"]) {
+		this.referal.referal = referal
 		return this;
 	}
-	setUser(user: ReferalsInterface["user"]) {
-		this.referals.user = user;
+	setUser(user: ReferalInterface["user"]) {
+		this.referal.user = user;
 		return this;
 	}
-	get() {
-		return this.referals;
-	}
+	get() { return this.referal; }
 }
 
-export const ReferalsModel: Model<ReferalsDoc> = mongoose
-	.model<ReferalsDoc>(REFERALS, referalSchema);
+export const ReferalModel: Model<ReferalDoc> = mongoose
+	.model<ReferalDoc>(REFERAL, referalchema);

@@ -18,7 +18,6 @@ router.post(`${userPrefix}/register`, UserController.createUser);
 router.post(`${userPrefix}/google-login`, UserController.createGoogleUser);
 router.post(`${userPrefix}/google-mobile-login`, UserController.createMobileGoogleUser);
 
-
 router.post(`${userPrefix}/validate/:token`, UserController.validateToken)
 
 router.post(`${userPrefix}/forgot-password/request`, UserController.forgotPasswordSendRequest)
@@ -32,5 +31,7 @@ router.post(`${walletPrefix}/deposit`, InAppWalletController.depositFunds)
 
 router.post(`${orderPrefix}/create`, InAppWalletController.createOrder)
 router.post(`${orderPrefix}/complete`, InAppWalletController.completeOrder)
+router.post(`${orderPrefix}/rewards`, InAppWalletController.rewardUser)
+router.post(`${orderPrefix}/rewards/init`, authorizeUserMiddleWare, InAppWalletController.initRewards)
 
 export { router as userRoutes }
