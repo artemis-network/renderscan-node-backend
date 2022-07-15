@@ -231,10 +231,10 @@ export class MarketplaceServices {
             var fs = require('fs');
             var slugs = fs.readFileSync(notableSlugsFilePath).toString().split("\n").sort(() => 0.5 - Math.random()).slice(0, limit);
             const results: any = []
-            slugs.forEach(async  (slug: any) => {
-                const info = await this.getCollectionInfoFromSlugService(slug.trim())
+            for (let i = 0; i < slugs.length; i++) {
+                const info = await this.getCollectionInfoFromSlugService(slugs[i].trim())
                 results.push(info)
-            })
+            }
             return results
         } catch (e) {
             console.log("error occured in updating the collection " + e)
