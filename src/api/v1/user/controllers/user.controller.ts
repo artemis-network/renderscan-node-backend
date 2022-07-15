@@ -11,6 +11,11 @@ import { EmailSender } from '../../utils/email'
 import { JWT } from '../../utils/jwt';
 import { Role, UserServices } from '../services/user.service'
 import { ADMIN, EMAIL_CONFIG } from '../../../../config';
+import { ReferalService } from '../services/referal.service';
+import { RewardService } from '../services/reward.service';
+import { RewardType } from '../models/reward.model';
+import { PAYMENT_TYPE, Transaction } from '../models/transaction.model';
+import { InAppWalletServices } from '../services/in_app_wallet.service';
 
 export class UserController {
 
@@ -35,13 +40,12 @@ export class UserController {
 	// @access public
 	static createUser = async (req: Request, res: Response) => {
 		type input = { username: string, password: string, email: string, referalCode: string };
-		type wallet_id = { walletId: string };
+		type wallet_input = { walletId: string };
 		try {
 			const { username, email, password, referalCode } = new Required(req.body)
 				.addKey("username")
 				.addKey("email")
 				.addKey("password")
-				.addKey("referalCode")
 				.getItems() as input;
 			try {
 				const isExists = await UserServices.isUserAlreadyExists(username, email)
@@ -61,6 +65,24 @@ export class UserController {
 
 					await UserServices.createWalletForUser(newUser._id)
 					logger.info(`>> creating wallet for user : ${newUser._id}`)
+
+					if (referalCode !== null || referalCode !== undefined) {
+						logger.info(`>> user signed up with referalcode with referal code: ${referalCode}`)
+						const referer = await ReferalService.getUserByReferalCode(referalCode);
+						await ReferalService.addReferal({ referalId: referer._id, userId: newUser._id })
+						const reward = await RewardService.getRewardByType(RewardType.REFERAL);
+						const { walletId } = await InAppWalletServices.getWallet(referer._id) as wallet_input;
+						const transaction = new Transaction({})
+							.setAmount(reward.amount)
+							.setCreatedAt(new Date())
+							.setDescription(reward.description)
+							.setPaymentType(PAYMENT_TYPE.REWARD)
+							.setRewardInfo(reward._id)
+							.setWalletId(walletId)
+							.get();
+						await InAppWalletServices.createTranascation(transaction)
+						logger.info(`>> creating reward referer for refering user: ${newUser._id}`)
+					}
 
 					const html: string = EmailSender.getEmailVerificationHTML(token);
 					await EmailSender.sendMail(
@@ -116,13 +138,29 @@ export class UserController {
 	// @param token : string
 	// @access public
 	static validateEmail = async (req: Request, res: Response) => {
+		type input = { token: string };
+		type wallet_input = { walletId: string }
 		try {
-			type input = { token: string };
 			const { token } = new Required(req.params)
 				.addKey("token").getItems() as input;
 			const isVerified = await UserServices.isValidToken(token)
 			await UserServices.setIsVerified(token, isVerified);
 			logger.info(`>> token validation check done`)
+
+			const reward = await RewardService.getRewardByType(RewardType.SIGNUP);
+			const user = await UserServices.getUserByToken(token);
+			const { walletId } = await InAppWalletServices.getWallet(user._id) as wallet_input;
+			const transaction = new Transaction({})
+				.setAmount(reward.amount)
+				.setCreatedAt(new Date())
+				.setDescription(reward.description)
+				.setPaymentType(PAYMENT_TYPE.REWARD)
+				.setRewardInfo(reward._id)
+				.setWalletId(walletId)
+				.get();
+			await InAppWalletServices.createTranascation(transaction)
+			logger.info(`>> creating reward for signing up for user : ${user._id}`)
+
 			return HttpFactory.STATUS_200_OK({ isVerified: isVerified }, res)
 		} catch (err) {
 			const error = err as Err;

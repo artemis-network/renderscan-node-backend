@@ -1,14 +1,7 @@
 import mongoose, { Schema, Model, Document } from 'mongoose';
 
-export enum RewardType {
-	SIGNUP, REFERAL, DAILY, CHALLENGE_COMPLETION
-}
-
-export interface RewardInterface {
-	amount: number;
-	description: string;
-	type: RewardType
-}
+export enum RewardType { SIGNUP, REFERAL, DAILY, CHALLENGE_COMPLETION }
+export interface RewardInterface { amount: number; description: string; type: RewardType }
 export interface RewardDoc extends RewardInterface, Document { }
 
 const Rewardchema = new Schema({
@@ -27,7 +20,6 @@ export const REWARD_NAMING: string = 'REWARD';
 export class Reward {
 	reward: RewardInterface;
 	constructor(reward: RewardInterface) { this.reward = reward }
-
 	setAmount(amount: RewardInterface["amount"]) {
 		this.reward.amount = amount
 		return this;

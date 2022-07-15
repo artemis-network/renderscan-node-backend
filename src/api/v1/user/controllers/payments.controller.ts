@@ -38,12 +38,7 @@ export class PaymentsController {
 	// @route /renderscan/v1/payments/create
 	// @access public
 	static createOrder = async (req: Request, res: Response) => {
-		type input = {
-			amount: number,
-			notes: string,
-			userId: string,
-			recepit: string
-		}
+		type input = { amount: number, notes: string, userId: string, recepit: string }
 		try {
 			const { amount, notes, userId, recepit } = new Required(req.body)
 				.addKey("amount")
@@ -93,8 +88,7 @@ export class PaymentsController {
 	static completeOrder = async (req: Request, res: Response) => {
 		type input = { walletId: string }
 		type input_transcation = {
-			amount: number; userId: string; id: string;
-			paymentId: string; signature: string;
+			amount: number; userId: string; id: string; paymentId: string; signature: string;
 		}
 		try {
 			const { amount, userId, id, paymentId, signature } = new Required(req.body)

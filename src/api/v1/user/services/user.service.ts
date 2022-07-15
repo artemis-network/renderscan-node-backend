@@ -6,7 +6,7 @@ import { GOOGLE_OAUTH_CLIENT } from '../../../../config'
 
 const client: any = new OAuth2Client(GOOGLE_OAUTH_CLIENT)
 
-import { db } from '../../db'
+import { db, UserDoc } from '../../db'
 import { DBObject } from '../../db_object';
 import { Err, ErrorFactory, ErrorTypes } from '../../errors/error_factory';
 import { logger } from '../../utils/logger';
@@ -23,6 +23,15 @@ export class UserServices {
 		} catch (e) {
 			logger.error(e);
 			throw new Error(`something went wrong`);
+		}
+	}
+
+	static getUserByToken = async (token: string) => {
+		try {
+			const query = await UserModel.findOne({ token: token })
+			return new DBObject(query).get() as UserDoc;
+		} catch (err) {
+			throw err;
 		}
 	}
 

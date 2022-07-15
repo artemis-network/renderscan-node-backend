@@ -28,7 +28,6 @@ export class RazorPayServices {
 			})
 		} catch (error) {
 			const err = error as Err;
-			console.log(err);
 			throw ErrorFactory.TYPE_ERROR(err.message);
 		}
 	}
@@ -39,13 +38,13 @@ export class RazorPayServices {
 			await RazorPayModel.create(razorPay);
 		} catch (error) {
 			const err = error as Err;
-			console.log(err)
 			throw ErrorFactory.TYPE_ERROR(err.message);
 		}
 	}
 
 	static updateAndGetTranscationByOrderId = async (
-		orderId: string, paymentId: string, signature: string) => {
+		orderId: string, paymentId: string, signature: string
+	) => {
 		try {
 			const query = await RazorPayModel.findOne().where({ orderId: orderId }).exec()
 			const payment = new DBObject(query).get() as RazorPayDoc;
@@ -64,51 +63,33 @@ export class RazorPayServices {
 	}
 
 	static getTranscations = async (walletId: string) => {
-		return await TranscationModel.find().where({ walletId: walletId });
+		try {
+			return new DBObject(await TranscationModel.find().where({ walletId: walletId }));
+		} catch (error) {
+			throw error;
+		}
 	}
 
 	static getBalanceFromWalletId = async (walletId: string) => {
 		try {
 			const transcations = await TranscationModel.find().where({ walletId: walletId }) as TransactionInterface[];
-
-			let normalRubyDebits = 0
-			let normalRubyCredits = 0
-
-			let rewardDebits = 0
-			let rewardCredits = 0
-
+			let normalRubyDebits = 0; let normalRubyCredits = 0;
+			let rewardDebits = 0; let rewardCredits = 0;
 			transcations.forEach(({ amount, payment, paymentType, walletId }) => {
-				console.log(amount, payment, paymentType, walletId)
-
-				if (payment === PAYMENT.CREDIT && paymentType === PAYMENT_TYPE.RAZOR_PAY) {
+				if (payment === PAYMENT.CREDIT && paymentType === PAYMENT_TYPE.RAZOR_PAY)
 					normalRubyCredits += amount ?? 0
-				}
-				if (payment === PAYMENT.DEBIT && paymentType === PAYMENT_TYPE.RAZOR_PAY) {
+				if (payment === PAYMENT.DEBIT && paymentType === PAYMENT_TYPE.RAZOR_PAY)
 					normalRubyDebits += amount ?? 0
-				}
-
-				if (payment === PAYMENT.CREDIT && paymentType === PAYMENT_TYPE.REWARD) {
+				if (payment === PAYMENT.CREDIT && paymentType === PAYMENT_TYPE.REWARD)
 					rewardCredits += amount ?? 0
-				}
-				if (payment === PAYMENT.DEBIT && paymentType === PAYMENT_TYPE.REWARD) {
+				if (payment === PAYMENT.DEBIT && paymentType === PAYMENT_TYPE.REWARD)
 					rewardDebits += amount ?? 0
-				}
 			});
-
-			console.log(transcations)
-
 			const ruby = normalRubyCredits - normalRubyDebits
 			const rewards = rewardCredits - rewardDebits
-			return {
-				ruby: rewards,
-				superRuby: ruby
-			}
-
+			return { ruby: rewards, superRuby: ruby }
 		} catch (error) {
-			return {
-				ruby: 0,
-				superRuby: 0
-			}
+			throw ErrorFactory.OBJECT_NOT_FOUND(`object not found`);
 		}
 	}
 }

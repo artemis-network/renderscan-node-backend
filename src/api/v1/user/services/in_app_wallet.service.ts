@@ -1,11 +1,9 @@
 import { db, TransactionInterface } from "../../db"
-import { logger } from "../../utils/logger";
 import { ErrorFactory, Err, ErrorTypes } from "../../errors/error_factory";
 import { DBObject } from "../../db_object";
 
 const { InAppWalletModel, TranscationModel } = db
 export class InAppWalletServices {
-
 	static createTranascation = async (transaction: TransactionInterface) => {
 		try {
 			await (await TranscationModel.create(transaction)).save();
@@ -14,8 +12,6 @@ export class InAppWalletServices {
 			throw ErrorFactory.TYPE_ERROR(err.message);
 		}
 	}
-
-
 	static getWallet = async (userId: string) => {
 		try {
 			const wallet = new DBObject(await InAppWalletModel.findOne({ user: userId })).get();
@@ -27,5 +23,4 @@ export class InAppWalletServices {
 			) throw ErrorFactory.OBJECT_NOT_FOUND("object not found")
 		}
 	}
-
 }
