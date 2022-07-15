@@ -2,13 +2,14 @@ import { rewards } from '../data/rewards'
 import { DBObject } from "../../db_object";
 import { ErrorFactory, } from "../../errors/error_factory";
 import { db, RewardDoc, RewardInterface } from "../../db"
+import { RewardType } from '../models/reward.model';
 
 const { RewardModel } = db
 export class RewardService {
 
-	static getRewardById = async (rewardId: string) => {
+	static getRewardByType = async (type: RewardType) => {
 		try {
-			return await new DBObject(await RewardModel.findById(rewardId)).get() as RewardDoc;
+			return await new DBObject(await RewardModel.findOne({ type: type })).get() as RewardDoc;
 		} catch (error) {
 			throw ErrorFactory.OBJECT_NOT_FOUND("object not found");
 		}

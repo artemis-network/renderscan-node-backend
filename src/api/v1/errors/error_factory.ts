@@ -13,6 +13,13 @@ export class ErrorFactory {
 		}
 	}
 
+	static INVALID_REFERAL_CODE(message: string): Err {
+		throw {
+			message: message,
+			name: ErrorTypes.INVALID_REFERAL_CODE.toString(),
+		}
+	}
+
 	static OBJECT_UN_DEFINED(message: string): Err {
 		throw {
 			message: message,

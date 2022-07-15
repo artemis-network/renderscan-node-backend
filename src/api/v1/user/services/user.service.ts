@@ -1,7 +1,6 @@
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 
-import { JWT } from '../../utils/jwt';
 import { OAuth2Client } from 'google-auth-library'
 import { GOOGLE_OAUTH_CLIENT } from '../../../../config'
 
@@ -9,9 +8,8 @@ const client: any = new OAuth2Client(GOOGLE_OAUTH_CLIENT)
 
 import { db } from '../../db'
 import { DBObject } from '../../db_object';
-import { ErrorFactory } from '../../errors/error_factory';
-
-type ErrorType = { name: string, message: string } | any
+import { Err, ErrorFactory, ErrorTypes } from '../../errors/error_factory';
+import { logger } from '../../utils/logger';
 
 const { UserModel, InAppWalletModel } = db;
 
@@ -23,7 +21,8 @@ export class UserServices {
 		try {
 			return crypto.randomBytes(32).toString("hex")
 		} catch (e) {
-			throw new Error("Error");
+			logger.error(e);
+			throw new Error(`something went wrong`);
 		}
 	}
 
@@ -36,7 +35,7 @@ export class UserServices {
 			const user = new DBObject(query)
 			await user.get()
 			return token;
-		} catch (err: ErrorType) {
+		} catch (err) {
 			throw err;
 		}
 	}
@@ -66,9 +65,10 @@ export class UserServices {
 			const user = new DBObject(query)
 			await user.get()
 			return true
-		} catch (err: ErrorType) {
-			if (err.name === ErrorFactory.OBJECT_NOT_FOUND ||
-				err.name === ErrorFactory.OBJECT_UN_DEFINED)
+		} catch (err) {
+			const error = err as Err;
+			if (error.name === ErrorTypes.OBJECT_NOT_FOUND_ERROR ||
+				error.name === ErrorTypes.OBJECT_UN_DEFINED_ERROR)
 				return false
 			return false
 		}
@@ -95,9 +95,13 @@ export class UserServices {
 		await InAppWalletModel.create({ balance: 5000, isActive: true, user: user_id })
 
 	static getUserByEmail = async (email: string) => {
-		const query = await UserModel.findOne({ email: email })
-		const user = new DBObject(query)
-		return await user.get();
+		try {
+			const query = await UserModel.findOne({ email: email })
+			const user = new DBObject(query)
+			return await user.get();
+		} catch (err) {
+			throw err;
+		}
 	}
 
 	static isUserAlreadyExists = async (username: string, email: string) => {
@@ -106,9 +110,10 @@ export class UserServices {
 			const user = new DBObject(query)
 			await user.get()
 			return true;
-		} catch (err: ErrorType) {
-			if (err.name === ErrorFactory.OBJECT_NOT_FOUND ||
-				err.name === ErrorFactory.OBJECT_UN_DEFINED
+		} catch (err) {
+			const error = err as Err;
+			if (error.name === ErrorTypes.OBJECT_NOT_FOUND_ERROR ||
+				error.name === ErrorTypes.OBJECT_UN_DEFINED_ERROR
 			)
 				return false
 			return false
@@ -116,19 +121,26 @@ export class UserServices {
 	}
 
 	static createUser = async (username: string, email: string, hash: string, token: string, isGoogleAccount: boolean) => {
-		return await UserModel.create({
-			username: username, email: email, password: hash, token: token,
-			isActivated: false, isGoogleAccount: isGoogleAccount, isVerified: false,
-			userType: Role.USER.toString()
-		});
+		try {
+			return await UserModel.create({
+				username: username, email: email, password: hash, token: token,
+				isActivated: false, isGoogleAccount: isGoogleAccount, isVerified: false,
+				userType: Role.USER.toString()
+			});
+		} catch (error) {
+			throw ErrorFactory.TYPE_ERROR(`Invalid types`)
+		}
 	}
+
+	static getUsersCount = async () => await UserModel.countDocuments()
+
 
 	static authenticateUser = async (username: string) => {
 		try {
 			const query = await UserModel.findOne({ $or: [{ username: username }, { email: username }] })
 			return new DBObject(query).get()
 		} catch (err) {
-			return { message: "Ok" }
+			throw err;
 		}
 	}
 
@@ -142,54 +154,6 @@ export class UserServices {
 		return { email: email, username: username, emailVerified: email_verified }
 	}
 
-
-	static googleLogin = async (googleToken: string) => {
-		try {
-
-		} catch (err: any) {
-			return {
-				error: true, userId: null, message: "FAILED", username: "", email: "",
-				accessToken: "", publicToken: "[GUEST]", status: 200, errorType: "FAILED"
-			}
-		}
-
-	}
-
-	static googleMobileLogin = async (email: string) => {
-		try {
-			const username = email.split("@")[0]
-			try {
-				const newUser = await UserModel.create({
-					username: username, email: email, password: "", token: "",
-					isActivated: false, isGoogleAccount: true, isVerified: false,
-				})
-				UserServices.createWalletForUser(newUser._id)
-				const token: string = JWT.generateJWTToken(newUser._id);
-				return {
-					error: false, userId: newUser._id, message: "SUCCESS",
-					username: newUser.username, errorType: "NONE", email: newUser.email,
-					accessToken: token, publicToken: "[ADMIN]", status: 200
-				};
-			} catch (err: any) {
-				console.log(err)
-				if (err["code"] === 11000) {
-					const user = await UserModel.findOne({ email: email })
-					const token: string = JWT.generateJWTToken(user?._id);
-					return {
-						error: false, userId: user?._id, message: "SUCCESS",
-						username: username, email: email, accessToken: token,
-						publicToken: "[ADMIN]", status: 200, errorType: "NONE"
-					}
-				}
-			}
-		} catch (err: any) {
-			return {
-				error: true, userId: "", message: "FAILED", username: "", email: "",
-				accessToken: "", publicToken: "[GUEST]", status: 200, errorType: "FAILED"
-			}
-		}
-
-	}
 
 }
 

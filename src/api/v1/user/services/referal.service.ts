@@ -1,5 +1,5 @@
 import { DBObject } from "../../db_object";
-import { db, UserInterface } from "../../db"
+import { db } from "../../db"
 import { Err, ErrorFactory, ErrorTypes } from "../../errors/error_factory";
 const { ReferalModel, UserModel } = db
 
@@ -8,13 +8,13 @@ export class ReferalService {
 		try {
 			return await new DBObject(
 				await UserModel.findOne({ referalCode: referalCode })
-			).get() as UserInterface;
+			).get();
 		} catch (error) {
 			throw ErrorFactory.OBJECT_NOT_FOUND("object not found");
 		}
 	}
 
-	static getUserReferalsAndAddNewReferal = async (userId: string, referalId: string) => {
+	static awardReferer = async (userId: string, referalId: string) => {
 		try {
 			const referal = new DBObject(await ReferalModel.findOne({ user: userId })).get()
 			await referal.updateOne({ referal: [...referal.referal, referalId] })
@@ -26,6 +26,7 @@ export class ReferalService {
 				err.name == ErrorTypes.OBJECT_UN_DEFINED_ERROR) {
 				return await ReferalModel.create({ user: userId, referal: [referalId] })
 			}
+			throw error;
 		}
 	}
 }

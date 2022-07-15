@@ -4,12 +4,6 @@ import { ErrorFactory, Err, ErrorTypes } from "../../errors/error_factory";
 import { DBObject } from "../../db_object";
 
 const { InAppWalletModel, TranscationModel } = db
-
-interface WalletDetails { error?: boolean, message?: string; balance?: number; _id?: string }
-interface Wallet {
-	walletId: string
-}
-
 export class InAppWalletServices {
 
 	static createTranascation = async (transaction: TransactionInterface) => {
