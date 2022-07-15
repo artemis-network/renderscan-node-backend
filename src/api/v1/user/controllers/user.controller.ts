@@ -118,6 +118,7 @@ export class UserController {
 				const error = err as Err;
 				if (error.name === ErrorTypes.INVALID_REFERAL_CODE) {
 					const response = { error: true, invalidReferalCode: true }
+					logger.error(`invalid referal code : ${error.message}`)
 					return HttpFactory.STATUS_200_OK(response, res)
 				}
 				return HttpFactory.STATUS_500_INTERNAL_SERVER_ERROR(err, res);

@@ -137,7 +137,6 @@ export class PaymentsController {
 			logger.error(`>> something went wrong : ${err.message} << `)
 			return HttpFactory.STATUS_500_INTERNAL_SERVER_ERROR(err.message, res);
 		}
-
 	}
 
 	// @desc rewarding user  
