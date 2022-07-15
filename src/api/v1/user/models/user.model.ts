@@ -1,15 +1,16 @@
 import mongoose, { Schema, Model, Document } from 'mongoose';
 
 export interface UserInterface {
-  username: string; email: string; password: string; isGoogleAccount: Boolean,
-  isVerified: Boolean, isActivated: Boolean, token: string, userType: string
-  referalCode: string;
+  token: string; email: string; username: string; userType: string
+  password: string; avatarUrl: string; isVerified: Boolean,
+  referalCode: string; isActivated: Boolean, isGoogleAccount: Boolean,
 }
 
 export interface UserDoc extends UserInterface, Document { }
 
 const userSchema = new Schema({
   username: { type: Schema.Types.String, required: true, unique: true, },
+  avatarUrl: { type: Schema.Types.String, required: false, },
   email: { type: Schema.Types.String, required: true, unique: true, },
   password: { type: Schema.Types.String, requried: true, },
   isGoogleAccount: { type: Schema.Types.Boolean, required: true },
@@ -17,12 +18,19 @@ const userSchema = new Schema({
   isActivated: { type: Schema.Types.Boolean, required: true },
   token: { type: Schema.Types.String, },
   userType: { type: Schema.Types.String, enum: ['ADMIN', 'USER', 'GUEST'], default: 'USER' },
-  referalCode: { type: Schema.Types.String, requird: true }
-});
+  referalCode: { type: Schema.Types.String, requird: true },
+},
+);
 
 export class User {
   user: UserInterface;
   constructor(user: UserInterface) { this.user = user }
+
+  setAvatar(avatarUrl: UserInterface["avatarUrl"]) {
+    this.user.avatarUrl = avatarUrl;
+    return this;
+  }
+
   setEmail(email: UserInterface["email"]) {
     this.user.email = email
     return this;
@@ -59,9 +67,7 @@ export class User {
     this.user.referalCode = referalCode;
     return this;
   }
-  get() {
-    return this.user;
-  }
+  get() { return this.user; }
 }
 
 export const USER_NAMING: string = "USER";

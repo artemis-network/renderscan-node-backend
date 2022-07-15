@@ -11,6 +11,11 @@ import { EmailSender } from '../../utils/email'
 import { JWT } from '../../utils/jwt';
 import { Role, UserServices } from '../services/user.service'
 import { ADMIN, EMAIL_CONFIG } from '../../../../config';
+import { ReferalService } from '../services/referal.service';
+import { RewardService } from '../services/reward.service';
+import { RewardType } from '../models/reward.model';
+import { PAYMENT_TYPE, Transaction } from '../models/transaction.model';
+import { InAppWalletServices } from '../services/in_app_wallet.service';
 
 export class UserController {
 
@@ -31,17 +36,16 @@ export class UserController {
 	}
 
 	// @desc creating new user
-	// @route /backend/v1/users/register
+	// @route /renderscan/v1/users/register
 	// @access public
 	static createUser = async (req: Request, res: Response) => {
 		type input = { username: string, password: string, email: string, referalCode: string };
-		type wallet_id = { walletId: string };
+		type wallet_input = { walletId: string };
 		try {
 			const { username, email, password, referalCode } = new Required(req.body)
 				.addKey("username")
 				.addKey("email")
 				.addKey("password")
-				.addKey("referalCode")
 				.getItems() as input;
 			try {
 				const isExists = await UserServices.isUserAlreadyExists(username, email)
@@ -61,6 +65,24 @@ export class UserController {
 
 					await UserServices.createWalletForUser(newUser._id)
 					logger.info(`>> creating wallet for user : ${newUser._id}`)
+
+					if (referalCode !== null || referalCode !== undefined) {
+						logger.info(`>> user signed up with referalcode with referal code: ${referalCode}`)
+						const referer = await ReferalService.getUserByReferalCode(referalCode);
+						await ReferalService.addReferal({ referalId: referer._id, userId: newUser._id })
+						const reward = await RewardService.getRewardByType(RewardType.REFERAL);
+						const { walletId } = await InAppWalletServices.getWallet(referer._id) as wallet_input;
+						const transaction = new Transaction({})
+							.setAmount(reward.amount)
+							.setCreatedAt(new Date())
+							.setDescription(reward.description)
+							.setPaymentType(PAYMENT_TYPE.REWARD)
+							.setRewardInfo(reward._id)
+							.setWalletId(walletId)
+							.get();
+						await InAppWalletServices.createTranascation(transaction)
+						logger.info(`>> creating reward referer for refering user: ${newUser._id}`)
+					}
 
 					const html: string = EmailSender.getEmailVerificationHTML(token);
 					await EmailSender.sendMail(
@@ -96,6 +118,7 @@ export class UserController {
 				const error = err as Err;
 				if (error.name === ErrorTypes.INVALID_REFERAL_CODE) {
 					const response = { error: true, invalidReferalCode: true }
+					logger.error(`invalid referal code : ${error.message}`)
 					return HttpFactory.STATUS_200_OK(response, res)
 				}
 				return HttpFactory.STATUS_500_INTERNAL_SERVER_ERROR(err, res);
@@ -112,17 +135,33 @@ export class UserController {
 
 
 	// @desc validate user email by token 
-	// @route /backend/v1/users/validate/:token
+	// @route /renderscan/v1/users/validate/:token
 	// @param token : string
 	// @access public
 	static validateEmail = async (req: Request, res: Response) => {
+		type input = { token: string };
+		type wallet_input = { walletId: string }
 		try {
-			type input = { token: string };
 			const { token } = new Required(req.params)
 				.addKey("token").getItems() as input;
 			const isVerified = await UserServices.isValidToken(token)
 			await UserServices.setIsVerified(token, isVerified);
 			logger.info(`>> token validation check done`)
+
+			const reward = await RewardService.getRewardByType(RewardType.SIGNUP);
+			const user = await UserServices.getUserByToken(token);
+			const { walletId } = await InAppWalletServices.getWallet(user._id) as wallet_input;
+			const transaction = new Transaction({})
+				.setAmount(reward.amount)
+				.setCreatedAt(new Date())
+				.setDescription(reward.description)
+				.setPaymentType(PAYMENT_TYPE.REWARD)
+				.setRewardInfo(reward._id)
+				.setWalletId(walletId)
+				.get();
+			await InAppWalletServices.createTranascation(transaction)
+			logger.info(`>> creating reward for signing up for user : ${user._id}`)
+
 			return HttpFactory.STATUS_200_OK({ isVerified: isVerified }, res)
 		} catch (err) {
 			const error = err as Err;
@@ -139,7 +178,7 @@ export class UserController {
 	}
 
 	// @desc app login 
-	// @route /backend/v1/users/login
+	// @route /renderscan/v1/users/login
 	// @access public
 	static loginUser = async (req: Request, res: Response) => {
 		type input = { username: string, password: string }
@@ -203,7 +242,7 @@ export class UserController {
 	};
 
 	// @desc forgot-password request 
-	// @route /backend/v1/users/forgot-password-request
+	// @route /renderscan/v1/users/forgot-password-request
 	// @access public
 	static forgotPasswordSendRequest = async (req: Request, res: Response) => {
 		type input = { email: string };
@@ -236,7 +275,7 @@ export class UserController {
 	};
 
 	// @desc validate user email by token 
-	// @route /backend/v1/users/change-password/:token
+	// @route /renderscan/v1/users/change-password/:token
 	// @param token : string
 	// @access public
 	static changePassword = async (req: Request, res: Response) => {
@@ -267,7 +306,7 @@ export class UserController {
 
 
 	// @desc google-login for web app 
-	// @route /backend/v1/users/google-login
+	// @route /renderscan/v1/users/google-login
 	// @access public
 	static createGoogleUser = async (req: Request, res: Response) => {
 		type input = { token: string };
@@ -322,7 +361,7 @@ export class UserController {
 	}
 
 	// @desc google-login for mobile app 
-	// @route /backend/v1/users/google-mobile-login
+	// @route /renderscan/v1/users/google-mobile-login
 	// @access public
 	static createMobileGoogleUser = async (req: Request, res: Response) => {
 		type input = { email: string };
@@ -365,6 +404,27 @@ export class UserController {
 			return HttpFactory.STATUS_200_OK(e, res);
 		}
 
+	}
+
+	// @desc set avatar url 
+	// @route /renderscan/v1/users/set-avatar
+	// @access public
+	static setAvatarUrl = async (req: Request, res: Response) => {
+		type input = { userId: string };
+		try {
+			// ? needs to implement code
+			const { userId } = new Required(req.body).addKey("userId").getItems() as input;
+			const newUser = await UserServices.setAvtarUrl("", "");
+			const response = { error: false, message: "SUCCESS", errorType: "NONE", };
+			return HttpFactory.STATUS_200_OK(response, res);
+		} catch (err) {
+			const error = err as Err;
+			if (error.name === ErrorTypes.REQUIRED_ERROR) {
+				logger.error(`bad request : ${error}`)
+				return HttpFactory.STATUS_400_BAD_REQUEST(error, res);
+			}
+			return HttpFactory.STATUS_500_INTERNAL_SERVER_ERROR(err, res);
+		}
 	}
 }
 

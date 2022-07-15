@@ -1,14 +1,15 @@
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 
-import { OAuth2Client } from 'google-auth-library'
-import { GOOGLE_OAUTH_CLIENT } from '../../../../config'
+import { OAuth2Client, UserRefreshClient } from 'google-auth-library'
+import { AVATAR_PATH, GOOGLE_OAUTH_CLIENT } from '../../../../config'
 
 const client: any = new OAuth2Client(GOOGLE_OAUTH_CLIENT)
 
-import { db } from '../../db'
+import { db, UserDoc } from '../../db'
 import { DBObject } from '../../db_object';
 import { Err, ErrorFactory, ErrorTypes } from '../../errors/error_factory';
+import { ImageServices } from '../../images/services/image.services';
 import { logger } from '../../utils/logger';
 
 const { UserModel, InAppWalletModel } = db;
@@ -17,12 +18,43 @@ export enum Role { ADMIN = "ADMIN", USER = "USER", GUEST = "GUEST" }
 
 export class UserServices {
 
+	static setAvtarUrl = async (userId: string, avatarUrl: string) => {
+		try {
+			const user = new DBObject(await UserModel.findById(userId)).get() as UserDoc;
+			await user.updateOne({ avatarUrl: avatarUrl })
+			await user.save();
+			this.uploadAvatarUrl(user.username)
+		} catch (e) {
+			throw e;
+		}
+	}
+
+	static uploadAvatarUrl = async (username: string) => {
+		try {
+			const s3 = ImageServices.getAWSS3Object();
+			const params = ImageServices.getS3ParamsToUpload(username, AVATAR_PATH)
+			s3.upload(params, function (err: any, data: any) { });
+		} catch (e) {
+			throw e;
+		}
+	}
+
+
 	static createToken = (): string => {
 		try {
 			return crypto.randomBytes(32).toString("hex")
 		} catch (e) {
 			logger.error(e);
 			throw new Error(`something went wrong`);
+		}
+	}
+
+	static getUserByToken = async (token: string) => {
+		try {
+			const query = await UserModel.findOne({ token: token })
+			return new DBObject(query).get() as UserDoc;
+		} catch (err) {
+			throw err;
 		}
 	}
 
