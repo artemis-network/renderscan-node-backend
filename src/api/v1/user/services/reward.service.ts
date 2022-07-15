@@ -1,10 +1,9 @@
+import { rewards } from '../data/rewards'
 import { DBObject } from "../../db_object";
 import { ErrorFactory, } from "../../errors/error_factory";
 import { db, RewardDoc, RewardInterface } from "../../db"
-import { rewards } from '../data/rewards'
 
 const { RewardModel } = db
-
 export class RewardService {
 
 	static getRewardById = async (rewardId: string) => {

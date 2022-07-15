@@ -1,13 +1,32 @@
 import { Request, Response } from 'express';
-import { UserServices } from '../services/user.service'
+import { Role, UserServices } from '../services/user.service'
 import { EmailSender } from '../../utils/email'
 import { HttpFactory } from '../../http/http_factory';
 import { JWT } from '../../utils/jwt';
 import { ErrorTypes } from '../../errors/error_types';
 import { Required } from '../../utils/required'
-import { UserInterface } from '../models/user.model';
+import { UserInterface, UserModel } from '../models/user.model';
+import { logger } from '../../utils/logger';
+import { ADMIN, EMAIL_CONFIG } from '../../../../config';
 
 export class UserController {
+
+	// @desc init admin 
+	// @route /renderscan/v1/users/init
+	// @access private
+	static initialize = async (req: Request, res: Response) => {
+		const deposit: number = 1000000
+		const userCount = await UserModel.find().countDocuments();
+		if (userCount <= 0) {
+			logger.info(">> create admin user")
+			const hash = await UserServices.hashPassword(ADMIN.password);
+			const user = await UserServices.createUser(ADMIN.username, ADMIN.email, hash, Role.ADMIN, false)
+			await UserServices.createWalletForUser(user?._id);
+			logger.info(">> successfully admin user")
+			return HttpFactory.STATUS_200_OK({ message: "OK" }, res)
+		}
+		return HttpFactory.STATUS_200_OK({ message: "FAILED" }, res)
+	}
 
 	// @desc creating new user
 	// @route /backend/v1/users/register
@@ -37,7 +56,7 @@ export class UserController {
 			const html: string = EmailSender.getEmailVerificationHTML(token);
 			console.log("sending verification email to - " + email)
 			await EmailSender.sendMail(
-				"contact@renderverse.io",
+				EMAIL_CONFIG.email,
 				email,
 				"Welcome to Renderplay, Please Verify Your Email",
 				"",
@@ -89,12 +108,9 @@ export class UserController {
 	// @route /backend/v1/users/google-mobile-login
 	// @access public
 	static createMobileGoogleUser = async (req: Request, res: Response) => {
-		const { email, client } = req.body;
-		if (client === "client0123") {
-			const result = await UserServices.googleMobileLogin(email)
-			return res.status(200).json(result)
-		}
-		return res.status(200).json({ message: "invalid client id" })
+		const { email } = req.body;
+		const result = await UserServices.googleMobileLogin(email)
+		return res.status(200).json(result)
 	}
 
 	// @desc app login 
@@ -102,6 +118,7 @@ export class UserController {
 	// @access public
 	static loginUser = async (req: Request, res: Response) => {
 		const { username, password } = req.body;
+		console.log(req.body)
 		try {
 			const user = await UserServices.authenticateUser(username)
 			if (user?.isGoogleAccount) {
@@ -114,6 +131,7 @@ export class UserController {
 			}
 
 			const authorized = await UserServices.verifyPassword(password, user?.password)
+
 			if (!authorized) {
 				const response = {
 					error: true,
@@ -133,7 +151,7 @@ export class UserController {
 			}
 
 			const token: string = JWT.generateJWTToken(user?._id);
-			const response = { error: false, accessToken: token, username: username, errorType: 'NONE' }
+			const response = { error: false, accessToken: token, userId: user?._id, username: username, errorType: 'NONE' }
 			return HttpFactory.STATUS_200_OK(response, res)
 		} catch (err: any) {
 			if (err.name === ErrorTypes.OBJECT_NOT_FOUND_ERROR) {

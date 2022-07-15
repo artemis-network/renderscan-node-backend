@@ -101,15 +101,13 @@ export class UserServices {
 	}
 
 	static isUserAlreadyExists = async (username: string, email: string) => {
-		const query = await UserModel.findOne({ $or: [{ username: username }, { email: email }] })
 		try {
+			const query = await UserModel.findOne({ $or: [{ username: username }, { email: email }] })
 			const user = new DBObject(query)
 			await user.get()
-			console.log(user)
 			return true;
 		} catch (err: ErrorType) {
-			if (
-				err.name === ErrorFactory.OBJECT_NOT_FOUND ||
+			if (err.name === ErrorFactory.OBJECT_NOT_FOUND ||
 				err.name === ErrorFactory.OBJECT_UN_DEFINED
 			)
 				return false
@@ -128,10 +126,9 @@ export class UserServices {
 	static authenticateUser = async (username: string) => {
 		try {
 			const query = await UserModel.findOne({ $or: [{ username: username }, { email: username }] })
-			const user = new DBObject(query)
-			return user.get()
+			return new DBObject(query).get()
 		} catch (err) {
-			throw err;
+			return { message: "Ok" }
 		}
 	}
 

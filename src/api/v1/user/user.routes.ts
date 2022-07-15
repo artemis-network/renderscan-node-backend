@@ -9,10 +9,9 @@ import { UserController } from './controllers/user.controller'
 import { InAppWalletController } from './controllers/in_app_wallet.controller'
 
 import { orderPrefix, userPrefix, walletPrefix } from '../config'
-import { UserBootStartController } from './controllers/user_init.controller';
 
 
-router.post(`${userPrefix}/init`, UserBootStartController.initialize);
+router.post(`${userPrefix}/init`, UserController.initialize);
 router.post(`${userPrefix}/login`, UserController.loginUser);
 router.post(`${userPrefix}/register`, UserController.createUser);
 router.post(`${userPrefix}/google-login`, UserController.createGoogleUser);
@@ -25,10 +24,8 @@ router.post(`${userPrefix}/change-password/:token`, UserController.changePasswor
 
 router.get(`${userPrefix}/test-token`, authorizeUserMiddleWare, (req, res) => res.send("hello"));
 
-router.post(`${walletPrefix}`, InAppWalletController.getWallet)
-router.post(`${walletPrefix}/deposit`, InAppWalletController.depositFunds)
 router.post(`${walletPrefix}/balance`, InAppWalletController.getBalance)
-router.post(`${walletPrefix}/transcations`, InAppWalletController.getTranscations)
+router.post(`${walletPrefix}/transactions`, InAppWalletController.getTranscations)
 
 router.post(`${orderPrefix}/create`, InAppWalletController.createOrder)
 router.post(`${orderPrefix}/complete`, InAppWalletController.completeOrder)

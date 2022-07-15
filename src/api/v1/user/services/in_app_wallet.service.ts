@@ -22,12 +22,10 @@ export class InAppWalletServices {
 	}
 
 
-
-	static getWallet = async (userId: string): Promise<{ walletId: string } | any> => {
+	static getWallet = async (userId: string) => {
 		try {
-			const query = await InAppWalletModel.findOne({ user: userId })
-			const object = new DBObject(query).get();
-			return { walletId: object._id };
+			const wallet = new DBObject(await InAppWalletModel.findOne({ user: userId })).get();
+			return { walletId: wallet._id };
 		} catch (e) {
 			const err = e as Err;
 			if (err.name === ErrorTypes.OBJECT_NOT_FOUND_ERROR ||
@@ -36,42 +34,4 @@ export class InAppWalletServices {
 		}
 	}
 
-	static getInAppWallet = async (userId: string): Promise<WalletDetails> => {
-		try {
-			const query = await InAppWalletModel.findOne({ user: userId })
-			const object = new DBObject(query);
-			const wallet = object.get()
-			return { error: false, message: "ok", balance: wallet?.balance, _id: wallet._id }
-		} catch (e) {
-			const err = e as Err;
-			if (err.name === ErrorTypes.OBJECT_NOT_FOUND_ERROR ||
-				err.name === ErrorTypes.OBJECT_UN_DEFINED_ERROR
-			) {
-				return { error: false, message: "ok", balance: 0 }
-			}
-		} finally {
-			return { error: false, message: "ok", balance: 0 };
-		}
-	}
-
-	static depositFunds = async (userId: string, amount: number): Promise<any> => {
-		const wallet = await InAppWalletModel.findOne({ user: userId });
-		logger.info(`>> depositing ${amount} funds to ${userId}`)
-		await wallet?.updateOne({ $set: { balance: (wallet?.balance + amount) } })
-		await wallet?.save()
-		return { error: false, message: "ok", balance: wallet?.balance }
-	}
-
-	static getBalance = async (userId: string) => {
-		const wallet = await InAppWalletModel.findOne({ user: userId });
-		return wallet?.balance || 0;
-	}
-
-	static deductFunds = async (userId: string, amount: number): Promise<any> => {
-		const wallet: any = await InAppWalletModel.findOne({ user: userId });
-		const currentBalance = await wallet?.balance || 0;
-		await wallet?.updateOne({ $set: { balance: currentBalance - amount } })
-		await wallet?.save()
-		return { error: false, message: "ok", balance: wallet?.balance }
-	}
 }

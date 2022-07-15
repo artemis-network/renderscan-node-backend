@@ -1,5 +1,5 @@
 import aws from 'aws-sdk'
-import { AWS_CREDS, IMAGE_CREDS } from '../../../../config'
+import { AWS_CREDS, IMAGE_CREDS, ML_MODEL_IP } from '../../../../config'
 import fs from 'fs'
 import path from 'path'
 import axios, { AxiosRequestConfig } from 'axios'
@@ -135,7 +135,7 @@ export class ImageServices {
         var requestConfig: AxiosRequestConfig = {
             method: 'post',
             responseType: 'arraybuffer',
-            url: 'http://u2net-predictor.tenant-compass.global.coreweave.com',
+            url: ML_MODEL_IP,
             headers: {
                 ...data.getHeaders()
             },

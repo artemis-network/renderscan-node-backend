@@ -34,9 +34,18 @@ const API_ADMIN_PASSWORD = process.env.API_ADMIN_PASSWORD || ""
 const USER_AGENT = process.env.USER_AGENT || ""
 const LOCAL_DATA_FOLDER_PATH = process.env.LOCAL_DATA_FOLDER_PATH || ""
 const LOCAL_SLUGS_FOLDER_PATH = process.env.LOCAL_SLUGS_FOLDER_PATH || ""
+const ML_MODEL_IP = process.env.ML_MODEL_IP
+
+const RAZOR_PAY = {
+	KEY_ID: process.env.RAZOR_PAY_KEY_ID,
+	KEY_SECRET: process.env.RAZOR_PAY_KEY_SECRET,
+}
+
+
 export {
 	PORT,
 	ADMIN,
+	RAZOR_PAY,
 	JWT_SECRET,
 	MONGO_DB_URL,
 	EMAIL_CONFIG,
@@ -45,6 +54,7 @@ export {
 	AWS_CREDS,
 	IMAGE_CREDS,
 	USER_AGENT,
+	ML_MODEL_IP,
 	LOCAL_DATA_FOLDER_PATH,
 	LOCAL_SLUGS_FOLDER_PATH
 }

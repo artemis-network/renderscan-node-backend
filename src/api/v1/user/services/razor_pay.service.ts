@@ -6,9 +6,10 @@ import { Razorpay as RP } from 'razorpay-typescript'
 import { Err, ErrorFactory, ErrorTypes } from '../../errors/error_factory'
 import { DBObject } from '../../db_object'
 import { PAYMENT, PAYMENT_TYPE, TransactionInterface, TranscationModel } from '../models/transaction.model'
+import { RAZOR_PAY } from '../../../../config'
 
 const instance = new RP({
-	authKey: { key_id: 'rzp_test_VmSch4maQMZS9L', key_secret: 'V18z4EipVdrQ9F7UK6Qokx2O' },
+	authKey: { key_id: RAZOR_PAY.KEY_ID ?? "", key_secret: RAZOR_PAY.KEY_SECRET ?? "" },
 	headers: {},
 })
 
@@ -63,7 +64,7 @@ export class RazorPayServices {
 	}
 
 	static getTranscations = async (walletId: string) => {
-		return await TranscationModel.find().where({ walletId: walletId }) as TransactionInterface[];
+		return await TranscationModel.find().where({ walletId: walletId });
 	}
 
 	static getBalanceFromWalletId = async (walletId: string) => {
