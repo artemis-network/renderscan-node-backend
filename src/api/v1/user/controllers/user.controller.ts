@@ -36,7 +36,7 @@ export class UserController {
 	}
 
 	// @desc creating new user
-	// @route /backend/v1/users/register
+	// @route /renderscan/v1/users/register
 	// @access public
 	static createUser = async (req: Request, res: Response) => {
 		type input = { username: string, password: string, email: string, referalCode: string };
@@ -135,7 +135,7 @@ export class UserController {
 
 
 	// @desc validate user email by token 
-	// @route /backend/v1/users/validate/:token
+	// @route /renderscan/v1/users/validate/:token
 	// @param token : string
 	// @access public
 	static validateEmail = async (req: Request, res: Response) => {
@@ -178,7 +178,7 @@ export class UserController {
 	}
 
 	// @desc app login 
-	// @route /backend/v1/users/login
+	// @route /renderscan/v1/users/login
 	// @access public
 	static loginUser = async (req: Request, res: Response) => {
 		type input = { username: string, password: string }
@@ -242,7 +242,7 @@ export class UserController {
 	};
 
 	// @desc forgot-password request 
-	// @route /backend/v1/users/forgot-password-request
+	// @route /renderscan/v1/users/forgot-password-request
 	// @access public
 	static forgotPasswordSendRequest = async (req: Request, res: Response) => {
 		type input = { email: string };
@@ -275,7 +275,7 @@ export class UserController {
 	};
 
 	// @desc validate user email by token 
-	// @route /backend/v1/users/change-password/:token
+	// @route /renderscan/v1/users/change-password/:token
 	// @param token : string
 	// @access public
 	static changePassword = async (req: Request, res: Response) => {
@@ -306,7 +306,7 @@ export class UserController {
 
 
 	// @desc google-login for web app 
-	// @route /backend/v1/users/google-login
+	// @route /renderscan/v1/users/google-login
 	// @access public
 	static createGoogleUser = async (req: Request, res: Response) => {
 		type input = { token: string };
@@ -361,7 +361,7 @@ export class UserController {
 	}
 
 	// @desc google-login for mobile app 
-	// @route /backend/v1/users/google-mobile-login
+	// @route /renderscan/v1/users/google-mobile-login
 	// @access public
 	static createMobileGoogleUser = async (req: Request, res: Response) => {
 		type input = { email: string };
@@ -404,6 +404,27 @@ export class UserController {
 			return HttpFactory.STATUS_200_OK(e, res);
 		}
 
+	}
+
+	// @desc set avatar url 
+	// @route /renderscan/v1/users/set-avatar
+	// @access public
+	static setAvatarUrl = async (req: Request, res: Response) => {
+		type input = { userId: string };
+		try {
+			// ? needs to implement code
+			const { userId } = new Required(req.body).addKey("userId").getItems() as input;
+			const newUser = await UserServices.setAvtarUrl("", "");
+			const response = { error: false, message: "SUCCESS", errorType: "NONE", };
+			return HttpFactory.STATUS_200_OK(response, res);
+		} catch (err) {
+			const error = err as Err;
+			if (error.name === ErrorTypes.REQUIRED_ERROR) {
+				logger.error(`bad request : ${error}`)
+				return HttpFactory.STATUS_400_BAD_REQUEST(error, res);
+			}
+			return HttpFactory.STATUS_500_INTERNAL_SERVER_ERROR(err, res);
+		}
 	}
 }
 
