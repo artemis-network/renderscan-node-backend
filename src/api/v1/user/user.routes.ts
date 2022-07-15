@@ -17,7 +17,7 @@ router.post(`${userPrefix}/register`, UserController.createUser);
 router.post(`${userPrefix}/google-login`, UserController.createGoogleUser);
 router.post(`${userPrefix}/google-mobile-login`, UserController.createMobileGoogleUser);
 
-router.post(`${userPrefix}/validate/:token`, UserController.validateToken)
+router.post(`${userPrefix}/validate/:token`, UserController.validateEmail)
 
 router.post(`${userPrefix}/forgot-password/request`, UserController.forgotPasswordSendRequest)
 router.post(`${userPrefix}/change-password/:token`, UserController.changePassword)
@@ -26,6 +26,5 @@ router.get(`${userPrefix}/test-token`, authorizeUserMiddleWare, (req, res) => re
 
 router.post(`${userPrefix}/balance`, InAppWalletController.getBalance)
 router.post(`${userPrefix}/transactions`, InAppWalletController.getTranscations)
-
 
 export { router as userRoutes }
