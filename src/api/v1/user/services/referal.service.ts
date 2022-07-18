@@ -8,11 +8,30 @@ interface AwardReferer { userId: string, referalId: string }
 export class ReferalService {
 	static getUserByReferalCode = async (referalCode: string) => {
 		try {
-			return await new DBObject(
+			return new DBObject(
 				await UserModel.findOne({ referalCode: referalCode })
 			).get();
 		} catch (error) {
-			throw ErrorFactory.OBJECT_NOT_FOUND("object not found");
+			throw error;
+		}
+	}
+
+	static getReferals = async (userId: string) => {
+		try {
+			const refs = await ReferalModel.findOne({ user: userId }).populate("referal") as any;
+			const response = []
+			for (let i = 0; i < refs.referal.length; i++) {
+				const resp = {
+					username: refs.referal[i].username,
+					avatarUrl: refs.referal[i].avatarUrl ?? null,
+					amount: 100
+				}
+				response.push(resp)
+			}
+			return response;
+		} catch (error) {
+			console.log(error)
+			throw error;
 		}
 	}
 
@@ -24,11 +43,14 @@ export class ReferalService {
 			return referal;
 		} catch (error) {
 			const err = error as Err;
-			if (err.name === ErrorTypes.OBJECT_NOT_FOUND_ERROR ||
-				err.name == ErrorTypes.OBJECT_UN_DEFINED_ERROR) {
-				return await ReferalModel.create({ user: input.userId, referal: [input.referalId] })
+			if (err.name === ErrorTypes.OBJECT_NOT_FOUND_ERROR) {
+				const referal = await ReferalModel.create({
+					user: input.userId,
+					referal: [input.referalId]
+				})
+				await referal.save();
+				return referal
 			}
-			throw error;
 		}
 	}
 }

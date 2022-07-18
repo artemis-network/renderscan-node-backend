@@ -14,10 +14,19 @@ import { ADMIN, EMAIL_CONFIG } from '../../../../config';
 import { ReferalService } from '../services/referal.service';
 import { RewardService } from '../services/reward.service';
 import { RewardType } from '../models/reward.model';
-import { PAYMENT_TYPE, Transaction } from '../models/transaction.model';
+import { PAYMENT, PAYMENT_TYPE, Transaction } from '../models/transaction.model';
 import { InAppWalletServices } from '../services/in_app_wallet.service';
+import { ImageServices } from '../../images/services/image.services';
+import { RazorPayServices } from '../services/razor_pay.service';
 
 export class UserController {
+
+	// helpers
+	static async cleanRemoveUser(email: string) {
+		const user = await UserServices.getUserByEmail(email);
+		InAppWalletServices.cleanUpWallet(user._id);
+		UserServices.cleanUpUser(user._id);
+	}
 
 	// @desc init admin 
 	// @route /renderscan/v1/users/init
@@ -66,10 +75,10 @@ export class UserController {
 					await UserServices.createWalletForUser(newUser._id)
 					logger.info(`>> creating wallet for user : ${newUser._id}`)
 
-					if (referalCode !== null || referalCode !== undefined) {
+					if (referalCode !== null) {
 						logger.info(`>> user signed up with referalcode with referal code: ${referalCode}`)
 						const referer = await ReferalService.getUserByReferalCode(referalCode);
-						await ReferalService.addReferal({ referalId: referer._id, userId: newUser._id })
+						await ReferalService.addReferal({ referalId: newUser._id, userId: referer._id })
 						const reward = await RewardService.getRewardByType(RewardType.REFERAL);
 						const { walletId } = await InAppWalletServices.getWallet(referer._id) as wallet_input;
 						const transaction = new Transaction({})
@@ -77,6 +86,7 @@ export class UserController {
 							.setCreatedAt(new Date())
 							.setDescription(reward.description)
 							.setPaymentType(PAYMENT_TYPE.REWARD)
+							.setPayment(PAYMENT.CREDIT)
 							.setRewardInfo(reward._id)
 							.setWalletId(walletId)
 							.get();
@@ -99,8 +109,10 @@ export class UserController {
 
 				} catch (error) {
 					const err = error as Err;
+					this.cleanRemoveUser(email)
 					if (err.name === ErrorTypes.TYPE_ERROR) {
 						logger.error(`>> bad request : ${err.message}`)
+
 						return HttpFactory.STATUS_400_BAD_REQUEST(err, res);
 					}
 					if (err.name === ErrorTypes.OBJECT_NOT_FOUND_ERROR ||
@@ -111,10 +123,12 @@ export class UserController {
 					if (err.name === ErrorTypes.EMAIL_ERROR) {
 						logger.error(`>> issue with email config : ${err.message}`)
 						return HttpFactory.STATUS_500_INTERNAL_SERVER_ERROR(err, res)
+
 					}
 					return HttpFactory.STATUS_500_INTERNAL_SERVER_ERROR(err, res)
 				}
 			} catch (err) {
+				this.cleanRemoveUser(email)
 				const error = err as Err;
 				if (error.name === ErrorTypes.INVALID_REFERAL_CODE) {
 					const response = { error: true, invalidReferalCode: true }
@@ -146,19 +160,22 @@ export class UserController {
 				.addKey("token").getItems() as input;
 			const isVerified = await UserServices.isValidToken(token)
 			await UserServices.setIsVerified(token, isVerified);
-			logger.info(`>> token validation check done`)
+			logger.info(`>> token validation check done`);
 
 			const reward = await RewardService.getRewardByType(RewardType.SIGNUP);
 			const user = await UserServices.getUserByToken(token);
 			const { walletId } = await InAppWalletServices.getWallet(user._id) as wallet_input;
+
+			const alreadyClaimedReward = await RazorPayServices.isUserAlreadyClaimedForSignupBonous(walletId);
+			if (alreadyClaimedReward) {
+				return HttpFactory.STATUS_200_OK({ isVerified: true, message: "reward already claimed" }, res)
+			}
+
 			const transaction = new Transaction({})
-				.setAmount(reward.amount)
-				.setCreatedAt(new Date())
-				.setDescription(reward.description)
-				.setPaymentType(PAYMENT_TYPE.REWARD)
-				.setRewardInfo(reward._id)
-				.setWalletId(walletId)
-				.get();
+				.setAmount(reward.amount).setCreatedAt(new Date())
+				.setRewardInfo(reward._id).setPayment(PAYMENT.CREDIT)
+				.setDescription(reward.description).setPaymentType(PAYMENT_TYPE.REWARD)
+				.setWalletId(walletId).get();
 			await InAppWalletServices.createTranascation(transaction)
 			logger.info(`>> creating reward for signing up for user : ${user._id}`)
 
@@ -166,12 +183,12 @@ export class UserController {
 		} catch (err) {
 			const error = err as Err;
 			if (error.name === ErrorTypes.OBJECT_NOT_FOUND_ERROR || ErrorTypes.OBJECT_UN_DEFINED_ERROR) {
-				logger.error(`bad request ${error.message}`)
-				const response = { isVerified: false, message: "user does not exists" };
+				logger.error(`${error.message}`)
+				const response = { isVerified: false, ...error };
 				return HttpFactory.STATUS_200_OK(response, res)
 			}
 			if (error.name === ErrorTypes.REQUIRED_ERROR) {
-				logger.error(`bad request ${error.message}`)
+				logger.error(`${error.message}`)
 				return HttpFactory.STATUS_400_BAD_REQUEST(error, res)
 			}
 		}
@@ -403,29 +420,72 @@ export class UserController {
 			}
 			return HttpFactory.STATUS_200_OK(e, res);
 		}
-
 	}
 
 	// @desc set avatar url 
 	// @route /renderscan/v1/users/set-avatar
 	// @access public
 	static setAvatarUrl = async (req: Request, res: Response) => {
-		type input = { userId: string };
 		try {
-			// ? needs to implement code
-			const { userId } = new Required(req.body).addKey("userId").getItems() as input;
-			const newUser = await UserServices.setAvtarUrl("", "");
-			const response = { error: false, message: "SUCCESS", errorType: "NONE", };
-			return HttpFactory.STATUS_200_OK(response, res);
-		} catch (err) {
-			const error = err as Err;
-			if (error.name === ErrorTypes.REQUIRED_ERROR) {
-				logger.error(`bad request : ${error}`)
-				return HttpFactory.STATUS_400_BAD_REQUEST(error, res);
+			type input = { userId: string };
+			const { userId } = new Required(JSON.parse(JSON.stringify(req.body))).addKey("userId").getItems() as input
+			const filename: string = (await UserServices.getUsername(userId)) + ".png"
+			const s3 = ImageServices.getAWSS3Object();
+			const params = ImageServices.getAvatarFileToUpload(filename, req.file?.buffer)
+			// const object = s3.upload(params)
+			// console.log(object)
+			return HttpFactory.STATUS_200_OK({ message: "OK" }, res)
+		} catch (error) {
+			const err = error as Err;
+			if (err.name === ErrorTypes.REQUIRED_ERROR) {
+				return HttpFactory.STATUS_400_BAD_REQUEST(err.message, res);
 			}
-			return HttpFactory.STATUS_500_INTERNAL_SERVER_ERROR(err, res);
+			return HttpFactory.STATUS_500_INTERNAL_SERVER_ERROR(err.message, res);
 		}
 	}
+
+	// @desc get referal code 
+	// @route /renderscan/v1/users/referal-code
+	// @access public
+	static getReferalCode = async (req: Request, res: Response) => {
+		try {
+			type input = { userId: string };
+			const { userId } = new Required(req.body).getItems() as input;
+			const code: string = await UserServices.getReferalCode(userId)
+			return HttpFactory.STATUS_200_OK({ referalCode: code }, res)
+		} catch (error) {
+			const err = error as Err;
+			if (err.name === ErrorTypes.REQUIRED_ERROR) {
+				return HttpFactory.STATUS_400_BAD_REQUEST(err.message, res);
+			}
+			if (err.name === ErrorTypes.OBJECT_NOT_FOUND_ERROR) {
+				return HttpFactory.STATUS_404_NOT_FOUND(err.message, res);
+			}
+			return HttpFactory.STATUS_500_INTERNAL_SERVER_ERROR(err.message, res);
+		}
+	}
+
+	// @desc get referals
+	// @route /renderscan/v1/users/referals
+	// @access public
+	static getReferals = async (req: Request, res: Response) => {
+		try {
+			type input = { userId: string };
+			const { userId } = new Required(req.body).getItems() as input;
+			const referals: any[] = await ReferalService.getReferals(userId)
+			return HttpFactory.STATUS_200_OK({ referals: referals }, res)
+		} catch (error) {
+			const err = error as Err;
+			if (err.name === ErrorTypes.REQUIRED_ERROR) {
+				return HttpFactory.STATUS_400_BAD_REQUEST(err.message, res);
+			}
+			if (err.name === ErrorTypes.OBJECT_NOT_FOUND_ERROR) {
+				return HttpFactory.STATUS_404_NOT_FOUND(err.message, res);
+			}
+			return HttpFactory.STATUS_500_INTERNAL_SERVER_ERROR(err.message, res);
+		}
+	}
+
 }
 
 

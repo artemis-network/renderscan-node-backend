@@ -17,10 +17,12 @@ export class InAppWalletServices {
 			const wallet = new DBObject(await InAppWalletModel.findOne({ user: userId })).get();
 			return { walletId: wallet._id };
 		} catch (e) {
-			const err = e as Err;
-			if (err.name === ErrorTypes.OBJECT_NOT_FOUND_ERROR ||
-				err.name === ErrorTypes.OBJECT_UN_DEFINED_ERROR
-			) throw ErrorFactory.OBJECT_NOT_FOUND("object not found")
+			throw e;
 		}
 	}
+
+	static cleanUpWallet = async (userId: string) => {
+		await InAppWalletModel.findOneAndRemove({ user: userId })
+	}
+
 }

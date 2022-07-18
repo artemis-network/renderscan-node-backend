@@ -7,6 +7,7 @@ import { Err, ErrorFactory, ErrorTypes } from '../../errors/error_factory'
 import { DBObject } from '../../db_object'
 import { PAYMENT, PAYMENT_TYPE, TransactionInterface, TranscationModel } from '../models/transaction.model'
 import { RAZOR_PAY } from '../../../../config'
+import { RewardType } from '../models/reward.model'
 
 const instance = new RP({
 	authKey: { key_id: RAZOR_PAY.KEY_ID ?? "", key_secret: RAZOR_PAY.KEY_SECRET ?? "" },
@@ -54,18 +55,29 @@ export class RazorPayServices {
 			payment.save();
 			return payment;
 		} catch (error) {
-			const err = error as Err;
-			if (err.name === ErrorTypes.OBJECT_NOT_FOUND_ERROR ||
-				err.name === ErrorTypes.OBJECT_UN_DEFINED_ERROR) {
-				throw ErrorFactory.OBJECT_NOT_FOUND("object does not exist");
-			}
+			throw error;
 		}
 	}
 
 	static getTranscations = async (walletId: string) => {
 		try {
-			return new DBObject(await TranscationModel.find().where({ walletId: walletId }));
+			return new DBObject(await TranscationModel.find().where({ walletId: walletId })).get();
 		} catch (error) {
+			throw error;
+		}
+	}
+
+	static isUserAlreadyClaimedForSignupBonous = async (walletId: string) => {
+		try {
+			const transcations = new DBObject(
+				await TranscationModel.find({ walletId: walletId }).where({ paymentType: PAYMENT_TYPE.REWARD }).populate('rewardInfo')
+			).get() as any[];
+			for (let i = 0; i < transcations.length; i++) {
+				if (transcations[i].rewardInfo.type === RewardType.SIGNUP) return true
+			}
+			return false
+		} catch (error) {
+			console.log(error)
 			throw error;
 		}
 	}
@@ -89,7 +101,7 @@ export class RazorPayServices {
 			const rewards = rewardCredits - rewardDebits
 			return { ruby: rewards, superRuby: ruby }
 		} catch (error) {
-			throw ErrorFactory.OBJECT_NOT_FOUND(`object not found`);
+			throw error;
 		}
 	}
 }

@@ -1,6 +1,6 @@
 import mongoose, { Schema, Model, Document } from 'mongoose';
 
-export enum RewardType { SIGNUP, REFERAL, DAILY, CHALLENGE_COMPLETION }
+export enum RewardType { SIGNUP = "SIGNUP", REFERAL = "REFERAL", DAILY = "DAILY", CHALLENGE_COMPLETION = "CHALLENGE_COMPLETION" }
 export interface RewardInterface { amount: number; description: string; type: RewardType }
 export interface RewardDoc extends RewardInterface, Document { }
 
@@ -10,7 +10,7 @@ const Rewardchema = new Schema({
 	type: {
 		type: Schema.Types.String, enum: [
 			RewardType.CHALLENGE_COMPLETION, RewardType.REFERAL,
-			RewardType.DAILY, RewardType.CHALLENGE_COMPLETION],
+			RewardType.DAILY, RewardType.SIGNUP],
 		required: true
 	}
 });

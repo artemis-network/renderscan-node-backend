@@ -35,12 +35,13 @@ export class EmailSender {
 	}
 
 	static getEmailVerificationHTML(token: string): string {
-		const url: string = `https://play.renderverse.io/verify/${token}`
+		// const url: string = `https://api.renderverse.io/renderscan/v1/users/validate/:token`
+		const url: string = `http://localhost:5001/renderscan/v1/users/validate/${token}`
 		return verificationHtml(url);
 	}
 
 	static getForgotPasswordHTML(token: string): string {
-		const url: string = `https://play.renderverse.io/change-password/${token}`
+		const url: string = `https://api.renderverse.io/renderscan/v1/users/change-password/${token}`
 		return forgotPasswordHtml(url);
 	}
 }

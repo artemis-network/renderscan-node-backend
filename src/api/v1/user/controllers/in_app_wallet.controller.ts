@@ -23,8 +23,10 @@ export class InAppWalletController {
 			return HttpFactory.STATUS_200_OK(resp, res);
 		} catch (error) {
 			const err = error as Err;
-			if (err.name === ErrorTypes.OBJECT_NOT_FOUND_ERROR ||
-				err.name === ErrorTypes.OBJECT_UN_DEFINED_ERROR) {
+			if (
+				err.name === ErrorTypes.OBJECT_NOT_FOUND_ERROR ||
+				err.name === ErrorTypes.OBJECT_UN_DEFINED_ERROR
+			) {
 				logger.error(`object not found : ${err}`)
 				return HttpFactory.STATUS_404_NOT_FOUND(err, res);
 			}
@@ -46,12 +48,14 @@ export class InAppWalletController {
 		try {
 			const { userId } = new Required(req.body).addKey("userId").getItems() as input;
 			const { walletId } = await InAppWalletServices.getWallet(userId) as wallet_input;
-			const resp = await RazorPayServices.getTranscations(walletId);
+			const resp: any = await RazorPayServices.getTranscations(walletId);
 			return HttpFactory.STATUS_200_OK({ transactions: resp }, res);
 		} catch (error) {
 			const err = error as Err;
-			if (err.name === ErrorTypes.OBJECT_NOT_FOUND_ERROR ||
-				err.name === ErrorTypes.OBJECT_UN_DEFINED_ERROR) {
+			if (
+				err.name === ErrorTypes.OBJECT_NOT_FOUND_ERROR ||
+				err.name === ErrorTypes.OBJECT_UN_DEFINED_ERROR
+			) {
 				logger.error(`object not found : ${err}`)
 				return HttpFactory.STATUS_404_NOT_FOUND(err, res);
 			}

@@ -1,11 +1,12 @@
 import aws from 'aws-sdk'
-import { AWS_CREDS, IMAGE_CREDS, ML_MODEL_IP } from '../../../../config'
+import { AVATAR_PATH, AWS_CREDS, IMAGE_CREDS, ML_MODEL_IP } from '../../../../config'
 import fs from 'fs'
 import path from 'path'
 import axios, { AxiosRequestConfig } from 'axios'
 import FormData from 'form-data'
 import Jimp from 'jimp'
 import { spawn } from 'child_process'
+import { Blob } from "buffer";
 
 export class ImageServices {
 
@@ -29,6 +30,23 @@ export class ImageServices {
             Prefix: username  // Can be your folder name
         };
         return params
+    }
+
+    static getAvatarFileToUpload = async (filename: string, buffer: any) => {
+        try {
+            const base64str = Buffer.from(buffer, 'binary').toString('base64');
+            const b = Buffer.from(base64str, 'base64');
+            var params = {
+                Bucket: AWS_CREDS.avatarContainer,
+                Key: filename,
+                Body: b,
+                ContentType: 'image/png'
+            };
+            return params
+        } catch (error) {
+            console.log(error)
+            throw error;
+        }
     }
 
     static getS3ParamsToUpload = (filename: string, username: string) => {

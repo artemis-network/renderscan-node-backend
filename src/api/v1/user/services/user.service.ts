@@ -23,17 +23,19 @@ export class UserServices {
 			const user = new DBObject(await UserModel.findById(userId)).get() as UserDoc;
 			await user.updateOne({ avatarUrl: avatarUrl })
 			await user.save();
-			this.uploadAvatarUrl(user.username)
 		} catch (e) {
 			throw e;
 		}
 	}
 
-	static uploadAvatarUrl = async (username: string) => {
+	static cleanUpUser = async (userId: string) => {
+		await UserModel.findByIdAndRemove(userId)
+	}
+
+	static getUsername = async (userId: string) => {
 		try {
-			const s3 = ImageServices.getAWSS3Object();
-			const params = ImageServices.getS3ParamsToUpload(username, AVATAR_PATH)
-			s3.upload(params, function (err: any, data: any) { });
+			const { username } = new DBObject(await UserModel.findById(userId)).get() as UserDoc;
+			return username
 		} catch (e) {
 			throw e;
 		}
@@ -54,7 +56,7 @@ export class UserServices {
 			const query = await UserModel.findOne({ token: token })
 			return new DBObject(query).get() as UserDoc;
 		} catch (err) {
-			throw err;
+			throw ErrorFactory.OBJECT_NOT_FOUND("user does not exists");
 		}
 	}
 
@@ -72,45 +74,72 @@ export class UserServices {
 		}
 	}
 
-	static updateToken = async (token: string) => {
-		const newToken = UserServices.createToken();
-		await UserModel.findOneAndUpdate({ token: token }, {
-			$set: { token: newToken }
-		});
-		return newToken;
+	static getReferalCode = async (userId: string) => {
+		try {
+			const user = new DBObject(await UserModel.findById(userId)).get() as UserDoc;
+			return user.referalCode;
+		} catch (err) {
+			throw ErrorFactory.OBJECT_NOT_FOUND("user does not exists");
+		}
 	}
 
+	// experimental
+	// try check with new DBObject
+	static updateToken = async (token: string) => {
+		const newToken = UserServices.createToken();
+		try {
+			new DBObject(await UserModel.findOneAndUpdate({ token: token }, {
+				$set: { token: newToken }
+			})).get();
+			return newToken;
+		} catch (error) {
+			throw error;
+		}
+	}
+
+
+	// experimental
+	// try catch with new DBObject
 	static setIsVerified = async (token: string, isVerified: boolean) => {
 		const crypto = require('crypto'), hash = crypto.getHashes();
 		let referalCode = crypto.createHash('sha1').update(token).digest('hex');
-		await UserModel.findOneAndUpdate({ token: token }, {
-			$set: {
-				isVerified: isVerified,
-				referalCode: referalCode
-			}
-		});
+		try {
+			new DBObject(await UserModel.findOneAndUpdate({ token: token }, {
+				$set: {
+					isVerified: isVerified,
+					referalCode: referalCode
+				}
+			})).get()
+		} catch (error) {
+			throw error;
+		}
 	}
 
 	static isValidToken = async (token: string) => {
 		try {
-			const query = await UserModel.findOne({ token: token });
-			const user = new DBObject(query)
+			const user = new DBObject(await UserModel.findOne({ token: token }));
 			await user.get()
 			return true
 		} catch (err) {
 			const error = err as Err;
-			if (error.name === ErrorTypes.OBJECT_NOT_FOUND_ERROR ||
-				error.name === ErrorTypes.OBJECT_UN_DEFINED_ERROR)
+			if (
+				error.name === ErrorTypes.OBJECT_NOT_FOUND_ERROR ||
+				error.name === ErrorTypes.OBJECT_UN_DEFINED_ERROR
+			)
 				return false
 			return false
 		}
 	}
 
 	static clearToken = async (token: string) => {
-		const user = await UserModel.findOneAndUpdate({ token: token }, {
-			$set: { token: "" }
-		});
-		await user?.save()
+		try {
+			const user = new DBObject(await UserModel.findOneAndUpdate({ token: token }, {
+				$set: { token: "" }
+			})).get();
+			await user?.save()
+		} catch (err) {
+			throw err;
+		}
 	}
 
 	static hashPassword = async (password: string) => {
@@ -119,8 +148,12 @@ export class UserServices {
 	}
 
 	static setPassword = async (token: string, hash: string) => {
-		const user = await UserModel.findOne({ token: token });
-		await user?.updateOne({ $set: { password: hash } })
+		try {
+			const user = new DBObject(await UserModel.findOne({ token: token })).get();
+			await user?.updateOne({ $set: { password: hash } })
+		} catch (err) {
+			throw err;
+		}
 	}
 
 	static createWalletForUser = async (user_id: string) =>
@@ -144,7 +177,8 @@ export class UserServices {
 			return true;
 		} catch (err) {
 			const error = err as Err;
-			if (error.name === ErrorTypes.OBJECT_NOT_FOUND_ERROR ||
+			if (
+				error.name === ErrorTypes.OBJECT_NOT_FOUND_ERROR ||
 				error.name === ErrorTypes.OBJECT_UN_DEFINED_ERROR
 			)
 				return false
@@ -166,7 +200,6 @@ export class UserServices {
 
 	static getUsersCount = async () => await UserModel.countDocuments()
 
-
 	static authenticateUser = async (username: string) => {
 		try {
 			const query = await UserModel.findOne({ $or: [{ username: username }, { email: username }] })
@@ -175,7 +208,6 @@ export class UserServices {
 			throw err;
 		}
 	}
-
 
 	static verifyPassword = async (password: string, hash: string) => bcrypt.compareSync(password, hash);
 

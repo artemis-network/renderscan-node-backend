@@ -21,6 +21,7 @@ const PORT = process.env.PORT || 5000
 
 const AWS_CREDS = {
 	container: process.env.AWS_S3_CONTAINER || "",
+	avatarContainer: process.env.AWS_S3_AVATAR_CONTAINER || "",
 	accessKeyId: process.env.AWS_ACCESS_KEY_ID || "",
 	accessKey: process.env.AWS_SECRET_ACCESS_KEY || "",
 }

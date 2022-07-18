@@ -11,16 +11,17 @@ export class RewardService {
 		try {
 			return await new DBObject(await RewardModel.findOne({ type: type })).get() as RewardDoc;
 		} catch (error) {
-			throw ErrorFactory.OBJECT_NOT_FOUND("object not found");
+			throw ErrorFactory.OBJECT_NOT_FOUND("reward not found");
 		}
 	}
 
 	static initRewards = async () => {
 		try {
 			const count = await RewardModel.countDocuments();
-			if (count < 0) {
+			if (count <= 0) {
 				const data: RewardInterface[] = rewards;
 				data.map(async (r) => {
+					console.log(r)
 					await (await RewardModel.create(r)).save();
 				})
 			}
