@@ -9,7 +9,7 @@ export class MarketplaceController {
 
         const { category, chain, count } = req.body
         try {
-            const resp = await MarketplaceServices.scrapeTrendingCollectionsService(category, chain, count)
+            const resp = await MarketplaceServices.getTrendingCollectionData(category, chain, count)
 
             if (resp != null && resp != undefined) {
                 console.log("Received trending collections")
@@ -31,7 +31,7 @@ export class MarketplaceController {
 
         const filePath = req.file.path
         try {
-            const resp = await MarketplaceServices.updateCollectionData(filePath)
+            const resp = await MarketplaceServices.updateTrendingCollectionData(filePath)
 
             if (resp != null && resp != undefined && resp == true) {
                 console.log("updated trending collections")

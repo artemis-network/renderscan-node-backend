@@ -6,63 +6,6 @@ import path from 'path'
 
 export class MarketplaceServices {
 
-    static scrapeTrendingCollectionsService = async (category: string, chain: string, count: number) => {
-        try {
-            let url = "https://opensea.io/rankings?sortBy=seven_day_volume"
-            if (category != null && category != '') {
-                url = url + "&category=" + category
-            }
-            if (chain != null && chain != '') {
-                url = url + "&chain=" + chain
-            }
-            const browser = await puppeteer.launch({
-                headless: true,
-                //executablePath: '/usr/bin/google-chrome',
-                args: ["--no-sandbox"],
-                'ignoreHTTPSErrors': true
-            });
-            const page = await browser.newPage()
-            await page.setUserAgent(USER_AGENT)
-            await page.goto(url)
-            const scriptHtml = await page.$eval('#__NEXT_DATA__', element => element.innerHTML);
-
-            if (scriptHtml != null && scriptHtml != undefined) {
-                const data = JSON.parse(scriptHtml).props.relayCache[0][1].json.data.rankings.edges
-                const results: any = []
-
-                data.some(function (item: any) {
-                    var json = {
-                        name: item.node.name,
-                        logo: item.node.logo,
-                        slug: item.node.slug,
-                        floor: item.node.statsV2.floorPrice?.eth,
-                        numOwners: item.node.statsV2.numOwners,
-                        oneDayChange: item.node.statsV2.oneDayChange,
-                        oneDayVolume: item.node.statsV2.oneDayVolume.unit,
-                        sevenDayChange: item.node.statsV2.sevenDayChange,
-                        sevenDayVolume: item.node.statsV2.sevenDayVolume.unit,
-                        thirtyDayChange: item.node.statsV2.thirtyDayChange,
-                        thirtyDayVolume: item.node.statsV2.thirtyDayVolume.unit,
-                    }
-                    results.push(json)
-                    if (results.length == count)
-                        return true
-                })
-                await browser.close()
-                return results;
-            }
-            else {
-                console.log("HTML is EMPTY, may be ACCESS DENIED")
-                return
-            }
-
-        } catch (err) {
-            console.log("Could not create a browser instance => : ", err);
-            throw err
-        }
-
-    }
-
     static getCollectionInfoFromSlugService = async (slug: string) => {
         let url = "https://api.opensea.io/api/v1/collection/" + slug
         var config = {
@@ -134,7 +77,7 @@ export class MarketplaceServices {
         return result
     }
 
-    static getCollectionData = async (category: string, chain: string, count: number) => {
+    static getTrendingCollectionData = async (category: string, chain: string, count: number) => {
         try {
             let url = "https://opensea.io/rankings?sortBy=seven_day_volume"
             if (category != null && category != '') {
@@ -147,46 +90,44 @@ export class MarketplaceServices {
             const collectionDataFilePath = path.join(LOCAL_DATA_FOLDER_PATH, collectionDataFileName)
             const src = fs.readFileSync(collectionDataFilePath).toString();
             if (src != null && src != undefined) {
-                const data = JSON.parse(src).data
+                const data = JSON.parse(src)
                 const results: any = []
-                data.some(function (item: any) {
+                for (let item of data) {
                     if (item.url == url) {
-                        const slugs = item.slugs
-                        slugs.forEach(function (slug: any) {
-
-                        })
+                        const slugs = item.items
+                        for(let slug of slugs) {
+                            var json = {
+                                name: slug.name,
+                                logo: slug.logo,
+                                slug: slug.slug,
+                                numOwners: slug.numOwners,
+                                oneDayChange: slug.oneDayChange,
+                                oneDayVolume: slug.oneDayVolume.unit,
+                                sevenDayChange: slug.sevenDayChange,
+                                sevenDayVolume: slug.sevenDayVolume.unit,
+                                thirtyDayChange: slug.thirtyDayChange,
+                                thirtyDayVolume: slug.thirtyDayVolume.unit,
+                            }
+                            results.push(json)
+                            if (results.length == count)
+                                break;
+                        }
+                        break;
                     }
-                    var json = {
-                        url: item.node.name,
-                        logo: item.node.logo,
-                        slug: item.node.slug,
-                        floor: item.node.statsV2.floorPrice?.eth,
-                        numOwners: item.node.statsV2.numOwners,
-                        oneDayChange: item.node.statsV2.oneDayChange,
-                        oneDayVolume: item.node.statsV2.oneDayVolume.unit,
-                        sevenDayChange: item.node.statsV2.sevenDayChange,
-                        sevenDayVolume: item.node.statsV2.sevenDayVolume.unit,
-                        thirtyDayChange: item.node.statsV2.thirtyDayChange,
-                        thirtyDayVolume: item.node.statsV2.thirtyDayVolume.unit,
-                    }
-                    results.push(json)
-                    if (results.length == count)
-                        return true
-                })
+                }
                 return results;
             }
             else {
-                console.log("HTML is EMPTY, may be ACCESS DENIED")
+                console.log("File is EMPTY, may be not updated")
                 return
             }
-
         } catch (e) {
             console.log("error occured in updating the collection " + e)
             throw e
         }
     }
 
-    static updateCollectionData = async (inputFilePath: string) => {
+    static updateTrendingCollectionData = async (inputFilePath: string) => {
         if (!fs.existsSync(LOCAL_DATA_FOLDER_PATH)) {
             fs.mkdirSync(LOCAL_DATA_FOLDER_PATH);
         }
@@ -233,7 +174,14 @@ export class MarketplaceServices {
             const results: any = []
             for (let i = 0; i < slugs.length; i++) {
                 const info = await this.getCollectionInfoFromSlugService(slugs[i].trim())
-                results.push(info)
+                const json = {
+                    name: info.name,
+                    bannerUrl: info.bannerUrl,
+                    imageUrl: info.imageUrl,
+                    oneDayChange: info.stats.one_day_change,
+                    slug: slugs[i].trim()
+                }
+                results.push(json)
             }
             return results
         } catch (e) {
