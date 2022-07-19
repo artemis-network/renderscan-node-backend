@@ -28,7 +28,7 @@ export class MarketplaceController {
     static updateTrendingCollections = async (req: Request, res: Response) => {
         if (!req.file)
             return HttpFactory.STATUS_500_INTERNAL_SERVER_ERROR({ message: "empty file" }, res)
-        
+
         const filePath = req.file.path
         try {
             const resp = await MarketplaceServices.updateCollectionData(filePath)
@@ -92,8 +92,16 @@ export class MarketplaceController {
             const resp = await MarketplaceServices.getShowcaseNFTsService(limit)
 
             if (resp != null && resp != undefined) {
+                const showCaseItems = []
+                for (let i = 0; i < resp.length; i++) {
+                    for (let j = 0; j < resp[i].length; j++) {
+                        if (resp[i][j].name !== null && resp[i][j].imageUrl != null) {
+                            showCaseItems.push(resp[i][j])
+                        }
+                    }
+                }
                 console.log("Received collection nfts for showcase")
-                return HttpFactory.STATUS_200_OK({ ShowcaseNFTs: resp }, res)
+                return HttpFactory.STATUS_200_OK({ ShowcaseNFTs: showCaseItems }, res)
 
             }
             else {
