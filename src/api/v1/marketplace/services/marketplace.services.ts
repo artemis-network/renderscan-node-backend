@@ -92,10 +92,10 @@ export class MarketplaceServices {
             if (src != null && src != undefined) {
                 const data = JSON.parse(src)
                 const results: any = []
-                data.some(function (item: any) {
+                for (let item of data) {
                     if (item.url == url) {
                         const slugs = item.items
-                        slugs.forEach(function (slug: any) {
+                        for(let slug of slugs) {
                             var json = {
                                 name: slug.name,
                                 logo: slug.logo,
@@ -110,10 +110,11 @@ export class MarketplaceServices {
                             }
                             results.push(json)
                             if (results.length == count)
-                                return true
-                        })
+                                break;
+                        }
+                        break;
                     }
-                })
+                }
                 return results;
             }
             else {
