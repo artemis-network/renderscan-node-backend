@@ -20,7 +20,6 @@ RUN npm install
 
 COPY src ./src
 COPY slugs ./slugs
-COPY data ./data
 RUN npm run build
 
 

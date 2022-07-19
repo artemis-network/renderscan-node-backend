@@ -174,7 +174,14 @@ export class MarketplaceServices {
             const results: any = []
             for (let i = 0; i < slugs.length; i++) {
                 const info = await this.getCollectionInfoFromSlugService(slugs[i].trim())
-                results.push(info)
+                const json = {
+                    name: info.name,
+                    bannerUrl: info.bannerUrl,
+                    imageUrl: info.imageUrl,
+                    oneDayChange: info.stats.one_day_change,
+                    slug: slugs[i].trim()
+                }
+                results.push(json)
             }
             return results
         } catch (e) {
