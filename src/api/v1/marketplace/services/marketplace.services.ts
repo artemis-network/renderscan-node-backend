@@ -102,11 +102,11 @@ export class MarketplaceServices {
                                 slug: slug.slug,
                                 numOwners: slug.numOwners,
                                 oneDayChange: slug.oneDayChange,
-                                oneDayVolume: slug.oneDayVolume.unit,
+                                oneDayVolume: slug.oneDayVolume,
                                 sevenDayChange: slug.sevenDayChange,
-                                sevenDayVolume: slug.sevenDayVolume.unit,
+                                sevenDayVolume: slug.sevenDayVolume,
                                 thirtyDayChange: slug.thirtyDayChange,
-                                thirtyDayVolume: slug.thirtyDayVolume.unit,
+                                thirtyDayVolume: slug.thirtyDayVolume,
                             }
                             results.push(json)
                             if (results.length == count)
