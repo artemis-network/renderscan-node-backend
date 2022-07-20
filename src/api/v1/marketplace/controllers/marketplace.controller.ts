@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { HttpFactory } from '../../http/http_factory';
 import { MarketplaceServices } from '../services/marketplace.services'
+import shuffle from 'shuffle-array';
 
 export class MarketplaceController {
 
@@ -48,14 +49,15 @@ export class MarketplaceController {
 
     }
 
-    static getCollectionInfoFromSlug = async (req: Request, res: Response) => {
-        const { slug } = req.body
+    static getCollectionFromSlug = async (req: Request, res: Response) => {
+        const { slug, limit } = req.body
         try {
-            const resp = await MarketplaceServices.getCollectionInfoFromSlugService(slug)
+            const info = await MarketplaceServices.getCollectionInfoFromSlugService(slug)
+            const nfts = await MarketplaceServices.getCollectionNFTsFromSlugService(slug, limit)
 
-            if (resp != null && resp != undefined) {
-                console.log("Received collection info from slug")
-                return HttpFactory.STATUS_200_OK({ CollectionInfo: resp }, res)
+            if (info != null && nfts != null) {
+                console.log("Received collection  from slug")
+                return HttpFactory.STATUS_200_OK({ CollectionInfo: info, CollectionNFTs: nfts }, res)
 
             }
             else {
@@ -67,14 +69,15 @@ export class MarketplaceController {
         }
     }
 
-    static getCollectionNFTsFromSlug = async (req: Request, res: Response) => {
-        const { slug, limit } = req.body
+    static getNFTFromContract = async (req: Request, res: Response) => {
+        const { contract, token_id } = req.body
         try {
-            const resp = await MarketplaceServices.getCollectionNFTsFromSlugService(slug, limit)
+            const resp = await MarketplaceServices.getNFTFromContractService(contract, token_id)
 
             if (resp != null && resp != undefined) {
-                console.log("Received collection nfts from slug")
-                return HttpFactory.STATUS_200_OK({ CollectionNFTs: resp }, res)
+
+                console.log("Received NFT INFO from contract and token")
+                return HttpFactory.STATUS_200_OK({ NFTInfo: resp }, res)
 
             }
             else {
@@ -100,8 +103,9 @@ export class MarketplaceController {
                         }
                     }
                 }
+                const shuffledItems = shuffle(showCaseItems);
                 console.log("Received collection nfts for showcase")
-                return HttpFactory.STATUS_200_OK({ ShowcaseNFTs: showCaseItems }, res)
+                return HttpFactory.STATUS_200_OK({ ShowcaseNFTs: shuffledItems }, res)
 
             }
             else {
@@ -132,5 +136,23 @@ export class MarketplaceController {
         }
     }
 
+    static searchCollections = async (req: Request, res: Response) => {
+        const { searchstr, limit } = req.body
+        try {
+            const resp = await MarketplaceServices.searchCollectionsService(searchstr, limit)
+
+            if (resp != null && resp != undefined) {
+                console.log("Received search collection info")
+                return HttpFactory.STATUS_200_OK({ Collections: resp }, res)
+
+            }
+            else {
+                return HttpFactory.STATUS_200_OK({ Info: "Response is empty from service" }, res)
+            }
+
+        } catch (e) {
+            return HttpFactory.STATUS_500_INTERNAL_SERVER_ERROR({ message: e }, res)
+        }
+    }
 
 }

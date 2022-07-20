@@ -1,6 +1,6 @@
 import axios, { AxiosRequestConfig } from 'axios'
 import puppeteer from 'puppeteer'
-import { USER_AGENT, LOCAL_DATA_FOLDER_PATH, LOCAL_SLUGS_FOLDER_PATH } from '../../../../config'
+import { USER_AGENT, LOCAL_DATA_FOLDER_PATH, LOCAL_SLUGS_FOLDER_PATH, BLOCKDAEMON_API_KEY } from '../../../../config'
 import fs from 'fs'
 import path from 'path'
 
@@ -25,7 +25,11 @@ export class MarketplaceServices {
                     imageUrl: data.collection.image_url,
                     bannerUrl: data.collection.banner_image_url,
                     contractAddress: data.collection.primary_asset_contracts[0]?.address,
-                    stats: data.collection.stats,
+                    totalSupply: data.collection.stats?.total_supply,
+                    owners: data.collection.stats?.num_owners,
+                    floorPrice: data.collection.stats?.floor_price,
+                    oneDayChange: data.collection.stats?.one_day_change,
+                    totalVolume: data.collection.stats?.total_volume,
                     twitter: data.collection.twitter_username,
                     externalUrl: data.collection.external_url
                 }
@@ -58,16 +62,52 @@ export class MarketplaceServices {
                     var json = {
                         name: item.name,
                         imageUrl: item.image_url,
-                        externalUrl: item.external_link,
-                        openseaUrl: item.permalink,
-                        owner: item.owner,
-                        creator: item.creator,
-                        traits: item.traits,
+                        lastPrice: (item.last_sale?.total_price ?? 0) / 10 ** 18,
+                        contract: item.asset_contract.address,
                         tokenId: item.token_id
                     }
                     results.push(json)
                 })
                 return results;
+            })
+            .catch(function (error) {
+                console.log(error);
+                throw error
+            });
+
+        return result
+    }
+
+    static getNFTFromContractService = async (contract: string, token_id: string) => {
+        let corsURL = "https://cors.ryanking13.workers.dev/?u="
+        let url = encodeURIComponent("https://api.opensea.io/api/v1/asset/" + contract + "/" + token_id)
+        var config = {
+            method: 'get',
+            url: corsURL + url,
+            headers: {
+                'User-Agent': USER_AGENT
+            }
+        };
+
+        const result = await axios(config)
+            .then(function (response) {
+                const data = JSON.parse(JSON.stringify(response.data));
+                const json = {
+                    collectionName: data.collection.name,
+                    collectionSlug: data.collection.slug,
+                    collectionImageUrl: data.collection.image_url,
+                    description: data.collection.description,
+                    name: data.name,
+                    imageUrl: data.image_url,
+                    lastPrice: (data.last_sale?.total_price ?? 0) / 10 ** 18,
+                    openSeaUrl: data.permalink,
+                    externalUrl: data.external_link,
+                    numSales: data.num_sales,
+                    traits: data.traits,
+                    creator: data.creator,
+                    owner: data.owner
+                }
+                return json
             })
             .catch(function (error) {
                 console.log(error);
@@ -95,7 +135,7 @@ export class MarketplaceServices {
                 for (let item of data) {
                     if (item.url == url) {
                         const slugs = item.items
-                        for(let slug of slugs) {
+                        for (let slug of slugs) {
                             var json = {
                                 name: slug.name,
                                 logo: slug.logo,
@@ -178,7 +218,7 @@ export class MarketplaceServices {
                     name: info.name,
                     bannerUrl: info.bannerUrl,
                     imageUrl: info.imageUrl,
-                    oneDayChange: info.stats.one_day_change,
+                    oneDayChange: info.oneDayChange,
                     slug: slugs[i].trim()
                 }
                 results.push(json)
@@ -188,5 +228,68 @@ export class MarketplaceServices {
             console.log("error occured in updating the collection " + e)
             throw e
         }
+    }
+
+    static getCollectionInfoFromContractService = async (contract: string) => {
+        let corsURL = "https://cors.ryanking13.workers.dev/?u="
+        let url = encodeURIComponent("https://api.opensea.io/api/v1/asset_contract/" + contract)
+        var config = {
+            method: 'get',
+            url: corsURL + url,
+            headers: {
+                'User-Agent': USER_AGENT
+            }
+        };
+
+        const result = await axios(config)
+            .then(function (response) {
+                const data = JSON.parse(JSON.stringify(response.data));
+                const json = {
+                    name: data.name,
+                    bannerUrl: data.collection.banner_image_url,
+                    imageUrl: data.collection.image_url,
+                    slug: data.collection.slug
+                }
+                return json
+            })
+            .catch(function (error) {
+                console.log(error);
+                throw error
+            });
+
+        return result
+    }
+
+    static searchCollectionsService = async (searchstr: string, limit: number) => {
+
+        let url = 'https://ubiquity.api.blockdaemon.com/v1/nft/ethereum/mainnet/collections/search?name=' + searchstr + '&verified=true'
+        let authHeader = 'bearer ' + BLOCKDAEMON_API_KEY
+        var config = {
+            method: 'get',
+            url: url,
+            headers: {
+                'Authorization': 'Bearer bd1bCmJFNLnGL5XA9LNI1g4gTjF742JyN2nuDgc6fLlcf0H'
+            }
+        };
+
+        const result = await axios(config)
+            .then(async (response) => {
+                const contracts: any = []
+                const results: any = []
+                const data = JSON.parse(JSON.stringify(response.data)).data;
+                for (let item of data) {
+                    contracts.push(item.contracts[0])
+                    if (contracts.length == limit) break;
+                }
+                for (let contract of contracts) {
+                    let info = await this.getCollectionInfoFromContractService(contract)
+                    results.push(info)
+                }
+                return results
+            })
+            .catch(function (error) {
+                console.log(error);
+            });
+            return result
     }
 }

@@ -16,10 +16,11 @@ import { marketplacePrefix } from '../config'
 
 router.post(`${marketplacePrefix}/gettrendingcollections`, MarketplaceController.getTrendingCollections);
 router.post(`${marketplacePrefix}/updatetrendingcollections`, upload.single('data'), MarketplaceController.updateTrendingCollections);
-router.post(`${marketplacePrefix}/collectioninfofromslug`, MarketplaceController.getCollectionInfoFromSlug);
-router.post(`${marketplacePrefix}/collectionnftsfromslug`, MarketplaceController.getCollectionNFTsFromSlug);
+router.post(`${marketplacePrefix}/getcollectionfromSlug`, MarketplaceController.getCollectionFromSlug);
+router.post(`${marketplacePrefix}/getnftfromcontract`, MarketplaceController.getNFTFromContract);
 router.post(`${marketplacePrefix}/getshowcasenfts`, MarketplaceController.getShowcaseNFTs);
 router.post(`${marketplacePrefix}/getnotablecollections`, MarketplaceController.getNotableCollectionInfo);
+router.post(`${marketplacePrefix}/searchcollections`, MarketplaceController.searchCollections);
 
 
 export { router as marketplaceRoutes }
