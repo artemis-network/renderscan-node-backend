@@ -21,6 +21,6 @@ router.post(`${marketplacePrefix}/getnftfromcontract`, MarketplaceController.get
 router.post(`${marketplacePrefix}/getshowcasenfts`, MarketplaceController.getShowcaseNFTs);
 router.post(`${marketplacePrefix}/getnotablecollections`, MarketplaceController.getNotableCollectionInfo);
 router.post(`${marketplacePrefix}/searchcollections`, MarketplaceController.searchCollections);
-
+router.post(`${marketplacePrefix}/searchnfts`, MarketplaceController.searchNFTs);
 
 export { router as marketplaceRoutes }

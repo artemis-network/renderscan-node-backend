@@ -1,6 +1,6 @@
 import axios, { AxiosRequestConfig } from 'axios'
 import puppeteer from 'puppeteer'
-import { USER_AGENT, LOCAL_DATA_FOLDER_PATH, LOCAL_SLUGS_FOLDER_PATH, BLOCKDAEMON_API_KEY } from '../../../../config'
+import { USER_AGENT, LOCAL_DATA_FOLDER_PATH, LOCAL_SLUGS_FOLDER_PATH, BLOCKDAEMON_API_KEY, NFTPORT_API_KEY } from '../../../../config'
 import fs from 'fs'
 import path from 'path'
 
@@ -78,6 +78,39 @@ export class MarketplaceServices {
         return result
     }
 
+    static getCollectionNFTsFromSymbolService = async (symbol: string, limit: number) => {
+        let url = "https://api-mainnet.magiceden.dev/v2/collections/" + symbol + "/activities?offset=0&limit=" + limit
+        var config = {
+            method: 'get',
+            url: url,
+            headers: {
+                'User-Agent': USER_AGENT
+            }
+        };
+
+        const result = await axios(config)
+            .then(function (response) {
+                const results: any = []
+                const data = JSON.parse(JSON.stringify(response.data));
+                data.forEach(function (item: any) {
+                    var json = {
+                        name: item.collection,
+                        imageUrl: item.image,
+                        lastPrice: item.price,
+                        contract: item.tokenMint
+                    }
+                    results.push(json)
+                })
+                return results;
+            })
+            .catch(function (error) {
+                console.log(error);
+                throw error
+            });
+
+        return result
+    }
+
     static getNFTFromContractService = async (contract: string, token_id: string) => {
         let corsURL = "https://cors.ryanking13.workers.dev/?u="
         let url = encodeURIComponent("https://api.opensea.io/api/v1/asset/" + contract + "/" + token_id)
@@ -115,6 +148,37 @@ export class MarketplaceServices {
             });
 
         return result
+    }
+
+    static getNFTFromTokenMintService = async (contract: string) => {
+        let url = "https://api-mainnet.magiceden.dev/v2/tokens/" + contract
+        var config = {
+            method: 'get',
+            url: url,
+            headers: {
+                'User-Agent': USER_AGENT
+            }
+        };
+
+        return await axios(config)
+            .then(function (response) {
+                var data = JSON.parse(JSON.stringify(response.data));
+                var json = {
+                    collectionName: data.collection,
+                    name: data.name,
+                    imageUrl: data.image,
+                    traits: data.attributes,
+                    attributes: data.attributes,
+                    creator: data.properties.creators,
+                    owner: data.owner
+                }
+                return json
+            })
+            .catch(function (error) {
+                console.log(error);
+                throw error
+            });
+
     }
 
     static getTrendingCollectionData = async (category: string, chain: string, count: number) => {
@@ -184,7 +248,7 @@ export class MarketplaceServices {
         }
     }
 
-    static getShowcaseNFTsService = async (limit: number) => {
+    static getEthereumShowcaseNFTsService = async (limit: number) => {
         try {
             const showcaseSlugsFileName = "showcaseslugs.txt"
             const showcaseSlugsFilePath = path.join(LOCAL_SLUGS_FOLDER_PATH, showcaseSlugsFileName)
@@ -195,6 +259,27 @@ export class MarketplaceServices {
             while (i < limit) {
                 var slug = slugs[Math.floor(Math.random() * slugs.length)];
                 const nfts = await this.getCollectionNFTsFromSlugService(slug.trim(), 3)
+                i = i + 3
+                results.push(nfts)
+            }
+            return results
+        } catch (e) {
+            console.log("error occured in updating the collection " + e)
+            throw e
+        }
+    }
+
+    static getSolanaShowcaseNFTsService = async (limit: number) => {
+        try {
+            const solanaSymbolsFileName = "solanasymbols.txt"
+            const solanaSymbolsFilePath = path.join(LOCAL_SLUGS_FOLDER_PATH, solanaSymbolsFileName)
+            var fs = require('fs');
+            var symbols = fs.readFileSync(solanaSymbolsFilePath).toString().split("\n");
+            let i = 0
+            const results: any = []
+            while (i < limit) {
+                var symbol = symbols[Math.floor(Math.random() * symbols.length)];
+                const nfts = await this.getCollectionNFTsFromSymbolService(symbol.trim(), 3)
                 i = i + 3
                 results.push(nfts)
             }
@@ -290,8 +375,39 @@ export class MarketplaceServices {
             .catch(function (error) {
                 console.log(error);
             });
-            return result
+        return result
     }
 
+    static searchNFTService = async (searchstr: string, limit: number) => {
+        let url = "https://api.nftport.xyz/v0/search?text=" + searchstr + "&chain=ethereum&page_number=1&page_size=" + limit + "&order_by=mint_date&sort_order=desc"
+        var config = {
+            method: 'get',
+            url: url,
+            headers: {
+                'Accept': 'application/json',
+                'Authorization': NFTPORT_API_KEY || ""
+            }
+        };
 
+        const result = await axios(config)
+            .then(async (response) => {
+                const contracts: any = []
+                const results: any = []
+                const data = JSON.parse(JSON.stringify(response.data)).search_results;
+                for (let item of data) {
+                    var info = {
+                        name: item.name,
+                        imageUrl: item.cached_file_url,
+                        contract: item.contract_address,
+                        tokenId: item.token_id
+                    }
+                    results.push(info)
+                }
+                return results
+            })
+            .catch(function (error) {
+                console.log(error);
+            });
+        return result
+    }
 }

@@ -70,9 +70,14 @@ export class MarketplaceController {
     }
 
     static getNFTFromContract = async (req: Request, res: Response) => {
-        const { contract, token_id } = req.body
+        const { contract, token_id, chain } = req.body
         try {
-            const resp = await MarketplaceServices.getNFTFromContractService(contract, token_id)
+            let resp;
+            if (chain == "ethereum") {
+                resp = await MarketplaceServices.getNFTFromContractService(contract, token_id)
+            } else if (chain == "solana") {
+                resp = await MarketplaceServices.getNFTFromTokenMintService(contract)
+            }
 
             if (resp != null && resp != undefined) {
 
@@ -90,10 +95,15 @@ export class MarketplaceController {
     }
 
     static getShowcaseNFTs = async (req: Request, res: Response) => {
-        const { limit } = req.body
+        const { chain, limit } = req.body
         try {
-            const resp = await MarketplaceServices.getShowcaseNFTsService(limit)
 
+            let resp;
+            if (chain == "ethereum") {
+                resp = await MarketplaceServices.getEthereumShowcaseNFTsService(limit)
+            } else if (chain == "solana") {
+                resp = await MarketplaceServices.getSolanaShowcaseNFTsService(limit)
+            }
             if (resp != null && resp != undefined) {
                 const showCaseItems = []
                 for (let i = 0; i < resp.length; i++) {
@@ -155,4 +165,22 @@ export class MarketplaceController {
         }
     }
 
+    static searchNFTs = async (req: Request, res: Response) => {
+        const { searchstr, limit } = req.body
+        try {
+            const resp = await MarketplaceServices.searchNFTService(searchstr, limit)
+
+            if (resp != null && resp != undefined) {
+                console.log("Received search NFTS info")
+                return HttpFactory.STATUS_200_OK({ Collections: resp }, res)
+
+            }
+            else {
+                return HttpFactory.STATUS_200_OK({ Info: "Response is empty from service" }, res)
+            }
+
+        } catch (e) {
+            return HttpFactory.STATUS_500_INTERNAL_SERVER_ERROR({ message: e }, res)
+        }
+    }
 }
