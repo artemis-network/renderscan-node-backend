@@ -119,7 +119,7 @@ export class MarketplaceServices {
 
     static getTrendingCollectionData = async (category: string, chain: string, count: number) => {
         try {
-            let url = "https://opensea.io/rankings?sortBy=seven_day_volume"
+            let url = "https://opensea.io/rankings?sortBy=one_day_volume"
             if (category != null && category != '') {
                 url = url + "&category=" + category
             }
@@ -292,4 +292,6 @@ export class MarketplaceServices {
             });
             return result
     }
+
+
 }
