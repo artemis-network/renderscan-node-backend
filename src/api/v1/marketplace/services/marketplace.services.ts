@@ -20,18 +20,18 @@ export class MarketplaceServices {
             .then(function (response) {
                 const data = JSON.parse(JSON.stringify(response.data));
                 const json = {
-                    name: data.collection.name,
-                    description: data.collection.description,
-                    imageUrl: data.collection.image_url,
-                    bannerUrl: data.collection.banner_image_url,
-                    contractAddress: data.collection.primary_asset_contracts[0]?.address,
-                    totalSupply: data.collection.stats?.total_supply,
-                    owners: data.collection.stats?.num_owners,
-                    floorPrice: data.collection.stats?.floor_price,
-                    oneDayChange: data.collection.stats?.one_day_change,
-                    totalVolume: data.collection.stats?.total_volume,
-                    twitter: data.collection.twitter_username,
-                    externalUrl: data.collection.external_url
+                    name: data.collection.name?.toString(),
+                    description: data.collection.description?.toString(),
+                    imageUrl: data.collection.image_url?.toString(),
+                    bannerUrl: data.collection.banner_image_url?.toString(),
+                    contractAddress: data.collection.primary_asset_contracts[0]?.address?.toString(),
+                    totalSupply: data.collection.stats?.total_supply?.toString(),
+                    owners: data.collection.stats?.num_owners?.toString(),
+                    floorPrice: data.collection.stats?.floor_price?.toString(),
+                    oneDayChange: data.collection.stats?.one_day_change?.toString(),
+                    totalVolume: data.collection.stats?.total_volume?.toString(),
+                    twitter: data.collection.twitter_username?.toString(),
+                    externalUrl: data.collection.external_url?.toString()
                 }
                 return json
             })
@@ -60,11 +60,11 @@ export class MarketplaceServices {
                 const data = JSON.parse(JSON.stringify(response.data)).assets;
                 data.some(function (item: any) {
                     var json = {
-                        name: item.name,
-                        imageUrl: item.image_url,
-                        lastPrice: (item.last_sale?.total_price ?? 0) / 10 ** 18,
-                        contract: item.asset_contract.address,
-                        tokenId: item.token_id
+                        name: item.name?.toString(),
+                        imageUrl: item.image_url?.toString(),
+                        lastPrice: ((item.last_sale?.total_price ?? 0) / 10 ** 18)?.toString(),
+                        contract: item.asset_contract.address?.toString(),
+                        tokenId: item.token_id?.toString()
                     }
                     results.push(json)
                 })
@@ -94,10 +94,10 @@ export class MarketplaceServices {
                 const data = JSON.parse(JSON.stringify(response.data));
                 data.forEach(function (item: any) {
                     var json = {
-                        name: item.collection,
-                        imageUrl: item.image,
-                        lastPrice: item.price,
-                        contract: item.tokenMint
+                        name: item.collection?.toString(),
+                        imageUrl: item.image?.toString(),
+                        lastPrice: item.price?.toString(),
+                        contract: item.tokenMint?.toString()
                     }
                     results.push(json)
                 })
@@ -109,6 +109,20 @@ export class MarketplaceServices {
             });
 
         return result
+    }
+
+    static convertJSONToStringValues = async (json: object) => {
+        const text = JSON.stringify(json)
+        const newObj = text.replace(/:([^"[{][0-9A-Za-z]*)([,\]\}]?)/g, ':\"$1\"$2').replace('"/"',"/")
+        try{
+            const newJson = JSON.parse(newObj)
+            return newJson
+        }
+        catch (e){
+            console.log(e)
+            console.log(newObj)
+            return 
+        }
     }
 
     static getNFTFromContractService = async (contract: string, token_id: string) => {
@@ -123,22 +137,23 @@ export class MarketplaceServices {
         };
 
         const result = await axios(config)
-            .then(function (response) {
+            .then(async function (response) {
                 const data = JSON.parse(JSON.stringify(response.data));
                 const json = {
-                    collectionName: data.collection.name,
-                    collectionSlug: data.collection.slug,
-                    collectionImageUrl: data.collection.image_url,
-                    description: data.collection.description,
-                    name: data.name,
-                    imageUrl: data.image_url,
-                    lastPrice: (data.last_sale?.total_price ?? 0) / 10 ** 18,
-                    openSeaUrl: data.permalink,
-                    externalUrl: data.external_link,
-                    numSales: data.num_sales,
-                    traits: data.traits,
-                    creator: data.creator,
-                    owner: data.owner
+                    collectionName: data.collection.name?.toString(),
+                    collectionSlug: data.collection.slug?.toString(),
+                    collectionImageUrl: data.collection.image_url?.toString(),
+                    description: data.collection.description?.toString(),
+                    name: data.name?.toString(),
+                    imageUrl: data.image_url?.toString(),
+                    lastPrice: ((data.last_sale?.total_price ?? 0) / 10 ** 18)?.toString(),
+                    openSeaUrl: data.permalink?.toString(),
+                    externalUrl: data.external_link?.toString(),
+                    numSales: data.num_sales?.toString(),
+                    totalSupply: data.collection.stats.total_supply?.toString(),
+                    traits: await MarketplaceServices.convertJSONToStringValues(data.traits),
+                    creator: await MarketplaceServices.convertJSONToStringValues(data.creator),
+                    owner: await MarketplaceServices.convertJSONToStringValues(data.owner)
                 }
                 return json
             })
@@ -161,16 +176,15 @@ export class MarketplaceServices {
         };
 
         return await axios(config)
-            .then(function (response) {
+            .then(async function (response) {
                 var data = JSON.parse(JSON.stringify(response.data));
                 var json = {
-                    collectionName: data.collection,
-                    name: data.name,
-                    imageUrl: data.image,
-                    traits: data.attributes,
-                    attributes: data.attributes,
-                    creator: data.properties.creators,
-                    owner: data.owner
+                    collectionName: data.collection?.toString(),
+                    name: data.name?.toString(),
+                    imageUrl: data.image?.toString(),
+                    traits: await MarketplaceServices.convertJSONToStringValues(data.attributes),
+                    creator: await MarketplaceServices.convertJSONToStringValues(data.properties.creators),
+                    owner: await MarketplaceServices.convertJSONToStringValues(data.owner)
                 }
                 return json
             })
@@ -192,7 +206,7 @@ export class MarketplaceServices {
             }
             const collectionDataFileName = "latestCollectionInfo.txt"
             const collectionDataFilePath = path.join(LOCAL_DATA_FOLDER_PATH, collectionDataFileName)
-            const src = fs.readFileSync(collectionDataFilePath).toString();
+            const src = fs.readFileSync(collectionDataFilePath)?.toString();
             if (src != null && src != undefined) {
                 const data = JSON.parse(src)
                 const results: any = []
@@ -201,16 +215,16 @@ export class MarketplaceServices {
                         const slugs = item.items
                         for (let slug of slugs) {
                             var json = {
-                                name: slug.name,
-                                logo: slug.logo,
-                                slug: slug.slug,
-                                numOwners: slug.numOwners,
-                                oneDayChange: slug.oneDayChange,
-                                oneDayVolume: slug.oneDayVolume,
-                                sevenDayChange: slug.sevenDayChange,
-                                sevenDayVolume: slug.sevenDayVolume,
-                                thirtyDayChange: slug.thirtyDayChange,
-                                thirtyDayVolume: slug.thirtyDayVolume,
+                                name: slug.name?.toString(),
+                                logo: slug.logo?.toString(),
+                                slug: slug.slug?.toString(),
+                                numOwners: slug.numOwners?.toString(),
+                                oneDayChange: slug.oneDayChange?.toString(),
+                                oneDayVolume: slug.oneDayVolume?.toString(),
+                                sevenDayChange: slug.sevenDayChange?.toString(),
+                                sevenDayVolume: slug.sevenDayVolume?.toString(),
+                                thirtyDayChange: slug.thirtyDayChange?.toString(),
+                                thirtyDayVolume: slug.thirtyDayVolume?.toString(),
                             }
                             results.push(json)
                             if (results.length == count)
@@ -253,7 +267,7 @@ export class MarketplaceServices {
             const showcaseSlugsFileName = "showcaseslugs.txt"
             const showcaseSlugsFilePath = path.join(LOCAL_SLUGS_FOLDER_PATH, showcaseSlugsFileName)
             var fs = require('fs');
-            var slugs = fs.readFileSync(showcaseSlugsFilePath).toString().split("\n");
+            var slugs = fs.readFileSync(showcaseSlugsFilePath)?.toString().split("\n");
             let i = 0
             const results: any = []
             while (i < limit) {
@@ -274,7 +288,7 @@ export class MarketplaceServices {
             const solanaSymbolsFileName = "solanasymbols.txt"
             const solanaSymbolsFilePath = path.join(LOCAL_SLUGS_FOLDER_PATH, solanaSymbolsFileName)
             var fs = require('fs');
-            var symbols = fs.readFileSync(solanaSymbolsFilePath).toString().split("\n");
+            var symbols = fs.readFileSync(solanaSymbolsFilePath)?.toString().split("\n");
             let i = 0
             const results: any = []
             while (i < limit) {
@@ -295,16 +309,16 @@ export class MarketplaceServices {
             const notableSlugsFileName = "notablecollectionslugs.txt"
             const notableSlugsFilePath = path.join(LOCAL_SLUGS_FOLDER_PATH, notableSlugsFileName)
             var fs = require('fs');
-            var slugs = fs.readFileSync(notableSlugsFilePath).toString().split("\n").sort(() => 0.5 - Math.random()).slice(0, limit);
+            var slugs = fs.readFileSync(notableSlugsFilePath)?.toString().split("\n").sort(() => 0.5 - Math.random()).slice(0, limit);
             const results: any = []
             for (let i = 0; i < slugs.length; i++) {
                 const info = await this.getCollectionInfoFromSlugService(slugs[i].trim())
                 const json = {
-                    name: info.name,
-                    bannerUrl: info.bannerUrl,
-                    imageUrl: info.imageUrl,
-                    oneDayChange: info.oneDayChange,
-                    slug: slugs[i].trim()
+                    name: info.name?.toString(),
+                    bannerUrl: info.bannerUrl?.toString(),
+                    imageUrl: info.imageUrl?.toString(),
+                    oneDayChange: info.oneDayChange?.toString(),
+                    slug: slugs[i].trim()?.toString()
                 }
                 results.push(json)
             }
@@ -330,10 +344,10 @@ export class MarketplaceServices {
             .then(function (response) {
                 const data = JSON.parse(JSON.stringify(response.data));
                 const json = {
-                    name: data.name,
-                    bannerUrl: data.collection.banner_image_url,
-                    imageUrl: data.collection.image_url,
-                    slug: data.collection.slug
+                    name: data.name?.toString(),
+                    bannerUrl: data.collection.banner_image_url?.toString(),
+                    imageUrl: data.collection.image_url?.toString(),
+                    slug: data.collection.slug?.toString()
                 }
                 return json
             })
@@ -396,10 +410,10 @@ export class MarketplaceServices {
                 const data = JSON.parse(JSON.stringify(response.data)).search_results;
                 for (let item of data) {
                     var info = {
-                        name: item.name,
-                        imageUrl: item.cached_file_url,
-                        contract: item.contract_address,
-                        tokenId: item.token_id
+                        name: item.name?.toString(),
+                        imageUrl: item.cached_file_url?.toString(),
+                        contract: item.contract_address?.toString(),
+                        tokenId: item.token_id?.toString()
                     }
                     results.push(info)
                 }
