@@ -272,9 +272,13 @@ export class MarketplaceServices {
             const results: any = []
             while (i < limit) {
                 var slug = slugs[Math.floor(Math.random() * slugs.length)];
-                const nfts = await this.getCollectionNFTsFromSlugService(slug.trim(), 3)
-                i = i + 3
-                results.push(nfts)
+                const nfts = await this.getCollectionNFTsFromSlugService(slug.trim(), 5)
+                for(let nft of nfts){
+                    if(nft['lastPrice'] != '0'){
+                        i = i + 1
+                        results.push(nft)
+                    }
+                }
             }
             return results
         } catch (e) {
@@ -294,8 +298,12 @@ export class MarketplaceServices {
             while (i < limit) {
                 var symbol = symbols[Math.floor(Math.random() * symbols.length)];
                 const nfts = await this.getCollectionNFTsFromSymbolService(symbol.trim(), 3)
-                i = i + 3
-                results.push(nfts)
+                for(let nft of nfts){
+                    if(nft['lastPrice'] != '0'){
+                        i = i + 1
+                        results.push(nft)
+                    }
+                }
             }
             return results
         } catch (e) {

@@ -105,15 +105,7 @@ export class MarketplaceController {
                 resp = await MarketplaceServices.getSolanaShowcaseNFTsService(limit)
             }
             if (resp != null && resp != undefined) {
-                const showCaseItems = []
-                for (let i = 0; i < resp.length; i++) {
-                    for (let j = 0; j < resp[i].length; j++) {
-                        if (resp[i][j].name !== null && resp[i][j].imageUrl != null) {
-                            showCaseItems.push(resp[i][j])
-                        }
-                    }
-                }
-                const shuffledItems = shuffle(showCaseItems);
+                const shuffledItems = shuffle(resp);
                 console.log("Received collection nfts for showcase")
                 return HttpFactory.STATUS_200_OK({ ShowcaseNFTs: shuffledItems }, res)
 
