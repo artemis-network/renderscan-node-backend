@@ -44,7 +44,7 @@ export class MarketplaceServices {
     }
 
     static getCollectionNFTsFromSlugService = async (slug: string, limit: number) => {
-        let corsURL = "https://cors.ryanking13.workers.dev/?u="
+        let corsURL = "https://cors.renderverse.workers.dev/?u="
         let url = encodeURIComponent("https://api.opensea.io/api/v1/assets?collection_slug=" + slug + "&limit=" + limit + "&order_direction=asc")
         var config = {
             method: 'get',
@@ -126,7 +126,7 @@ export class MarketplaceServices {
     }
 
     static getNFTFromContractService = async (contract: string, token_id: string) => {
-        let corsURL = "https://cors.ryanking13.workers.dev/?u="
+        let corsURL = "https://cors.renderverse.workers.dev/?u="
         let url = encodeURIComponent("https://api.opensea.io/api/v1/asset/" + contract + "/" + token_id)
         var config = {
             method: 'get',
@@ -338,7 +338,7 @@ export class MarketplaceServices {
     }
 
     static getCollectionInfoFromContractService = async (contract: string) => {
-        let corsURL = "https://cors.ryanking13.workers.dev/?u="
+        let corsURL = "https://cors.renderverse.workers.dev/?u="
         let url = encodeURIComponent("https://api.opensea.io/api/v1/asset_contract/" + contract)
         var config = {
             method: 'get',
