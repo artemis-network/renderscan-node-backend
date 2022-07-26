@@ -34,6 +34,7 @@
     "npm": "^8.14.0",
     "puppeteer": "^15.3.1",
     "razorpay": "^2.8.2",
+    "shuffle": "^0.2.5",
     "shuffle-array": "^1.0.1",
     "winston": "^3.7.2"
   },

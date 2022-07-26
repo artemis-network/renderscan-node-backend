@@ -50,6 +50,7 @@ export class UserController {
 	static createUser = async (req: Request, res: Response) => {
 		type input = { username: string, password: string, email: string, referalCode: string };
 		type wallet_input = { walletId: string };
+		console.log(req.body);
 		try {
 			const { username, email, password, referalCode } = new Required(req.body)
 				.addKey("username")
@@ -75,7 +76,8 @@ export class UserController {
 					await UserServices.createWalletForUser(newUser._id)
 					logger.info(`>> creating wallet for user : ${newUser._id}`)
 
-					if (referalCode !== null) {
+
+					if (referalCode !== null && referalCode !== "") {
 						logger.info(`>> user signed up with referalcode with referal code: ${referalCode}`)
 						const referer = await ReferalService.getUserByReferalCode(referalCode);
 						await ReferalService.addReferal({ referalId: newUser._id, userId: referer._id })
@@ -117,8 +119,9 @@ export class UserController {
 					}
 					if (err.name === ErrorTypes.OBJECT_NOT_FOUND_ERROR ||
 						err.name === ErrorTypes.OBJECT_UN_DEFINED_ERROR) {
-						logger.error(`>> object not found : ${err.message}`)
-						return HttpFactory.STATUS_404_NOT_FOUND(err, res);
+						const response = { error: true, invalidReferalCode: true }
+						logger.error(`invalid referal code : ${err.message}`)
+						return HttpFactory.STATUS_200_OK(response, res)
 					}
 					if (err.name === ErrorTypes.EMAIL_ERROR) {
 						logger.error(`>> issue with email config : ${err.message}`)
