@@ -1,1 +1,8 @@
 profile page
+
+
+backend changes
+-> if name is null build name with token
+-> price 0 filter
+-> infinite scrolling offset for explore
+-> avatar url

@@ -50,7 +50,6 @@ export class UserController {
 	static createUser = async (req: Request, res: Response) => {
 		type input = { username: string, password: string, email: string, referalCode: string };
 		type wallet_input = { walletId: string };
-		console.log(req.body);
 		try {
 			const { username, email, password, referalCode } = new Required(req.body)
 				.addKey("username")
@@ -58,8 +57,8 @@ export class UserController {
 				.addKey("password")
 				.getItems() as input;
 			try {
-				const isExists = await UserServices.isUserAlreadyExists(username, email)
-				if (isExists) {
+				const isUserExists = await UserServices.isUserAlreadyExists(username, email)
+				if (isUserExists) {
 					const response = {
 						error: true,
 						errorType: "USER_ALREADY_EXIST",
@@ -106,16 +105,20 @@ export class UserController {
 					);
 
 					logger.info(`>> sending verification email for ${email}`)
-					const response = { message: "Successfully created", errorType: "NONE", error: false };
+					const response = { message: "Successfully signup successfully, verification email has sent", errorType: "NONE", error: false };
 					return HttpFactory.STATUS_200_OK(response, res)
 
 				} catch (error) {
 					const err = error as Err;
 					this.cleanRemoveUser(email)
 					if (err.name === ErrorTypes.TYPE_ERROR) {
+						const response = {
+							error: true,
+							errorType: "USER_ALREADY_EXIST",
+							message: "Bad request",
+						}
 						logger.error(`>> bad request : ${err.message}`)
-
-						return HttpFactory.STATUS_400_BAD_REQUEST(err, res);
+						return HttpFactory.STATUS_200_OK(response, res)
 					}
 					if (err.name === ErrorTypes.OBJECT_NOT_FOUND_ERROR ||
 						err.name === ErrorTypes.OBJECT_UN_DEFINED_ERROR) {
@@ -125,8 +128,12 @@ export class UserController {
 					}
 					if (err.name === ErrorTypes.EMAIL_ERROR) {
 						logger.error(`>> issue with email config : ${err.message}`)
-						return HttpFactory.STATUS_500_INTERNAL_SERVER_ERROR(err, res)
-
+						const response = {
+							error: true,
+							errorType: "USER_ALREADY_EXIST",
+							message: "Internal Server Error",
+						}
+						return HttpFactory.STATUS_200_OK(response, res)
 					}
 					return HttpFactory.STATUS_500_INTERNAL_SERVER_ERROR(err, res)
 				}
@@ -134,7 +141,7 @@ export class UserController {
 				this.cleanRemoveUser(email)
 				const error = err as Err;
 				if (error.name === ErrorTypes.INVALID_REFERAL_CODE) {
-					const response = { error: true, invalidReferalCode: true }
+					const response = { error: true, invalidReferalCode: true, message: "invalid referal code" }
 					logger.error(`invalid referal code : ${error.message}`)
 					return HttpFactory.STATUS_200_OK(response, res)
 				}
