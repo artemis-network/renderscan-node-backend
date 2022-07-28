@@ -122,7 +122,7 @@ export class UserController {
 					}
 					if (err.name === ErrorTypes.OBJECT_NOT_FOUND_ERROR ||
 						err.name === ErrorTypes.OBJECT_UN_DEFINED_ERROR) {
-						const response = { error: true, invalidReferalCode: true }
+						const response = { error: true, invalidReferalCode: true, message: "Invalid referal code" }
 						logger.error(`invalid referal code : ${err.message}`)
 						return HttpFactory.STATUS_200_OK(response, res)
 					}
