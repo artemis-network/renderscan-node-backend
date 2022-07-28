@@ -496,6 +496,51 @@ export class UserController {
 		}
 	}
 
+	// @desc update user
+	// @route /renderscan/v1/users/update
+	// @access public
+	static updateUser = async (req: Request, res: Response) => {
+		try {
+			type input = { userId: string, displayName: string; language: string; region: string };
+			const { userId, displayName, language, region } = new Required(req.body).getItems() as input;
+			await UserServices.updateUser(userId, region, language, displayName);
+			return HttpFactory.STATUS_200_OK({ message: "User updated successfully", error: false }, res)
+		} catch (error) {
+			const err = error as Err;
+			if (err.name === ErrorTypes.REQUIRED_ERROR) {
+				return HttpFactory.STATUS_400_BAD_REQUEST(err.message, res);
+			}
+			if (err.name === ErrorTypes.OBJECT_NOT_FOUND_ERROR) {
+				return HttpFactory.STATUS_404_NOT_FOUND(err.message, res);
+			}
+			return HttpFactory.STATUS_500_INTERNAL_SERVER_ERROR(err.message, res);
+		}
+	}
+
+
+	// @desc user details
+	// @route /renderscan/v1/users/details
+	// @access public
+	static getUserDetails = async (req: Request, res: Response) => {
+		try {
+			type input = { userId: string };
+			const { userId } = new Required(req.body).getItems() as input;
+			console.log(userId)
+			const response = await UserServices.getUserDetails(userId);
+			console.log(response)
+			return HttpFactory.STATUS_200_OK({ ...response }, res)
+		} catch (error) {
+			const err = error as Err;
+			if (err.name === ErrorTypes.REQUIRED_ERROR) {
+				return HttpFactory.STATUS_400_BAD_REQUEST(err.message, res);
+			}
+			if (err.name === ErrorTypes.OBJECT_NOT_FOUND_ERROR) {
+				return HttpFactory.STATUS_404_NOT_FOUND(err.message, res);
+			}
+			return HttpFactory.STATUS_500_INTERNAL_SERVER_ERROR(err.message, res);
+		}
+	}
+
 }
 
 

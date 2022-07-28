@@ -209,6 +209,37 @@ export class UserServices {
 		}
 	}
 
+	static updateUser = async (userId: string, region: string, language: string, displayName: string) => {
+		try {
+			const user = new DBObject(await UserModel.findById(userId)).get() as UserDoc
+			await user.updateOne({
+				$set: {
+					region: region,
+					language: language,
+					displayName: displayName
+				}
+			})
+			await user.save()
+		} catch (error) {
+			throw error
+		}
+
+	}
+
+	static getUserDetails = async (userId: string) => {
+		try {
+			const user = new DBObject(await UserModel.findById(userId)).get() as UserDoc
+			const response = {
+				region: user.region,
+				displayName: user.displayName,
+				language: user.language
+			}
+			return response;
+		} catch (error) {
+			throw error;
+		}
+	}
+
 	static verifyPassword = async (password: string, hash: string) => bcrypt.compareSync(password, hash);
 
 	static verifyGoogleTokenAndFetchCredentials = async (token: string) => {

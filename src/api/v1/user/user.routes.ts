@@ -32,5 +32,7 @@ router.post(`${userPrefix}/transactions`, InAppWalletController.getTranscations)
 router.post(`${userPrefix}/set-avatar`, upload.single('avatar'), UserController.setAvatarUrl)
 router.post(`${userPrefix}/referal-code`, UserController.getReferalCode)
 router.post(`${userPrefix}/referals`, UserController.getReferals)
+router.post(`${userPrefix}/update`, UserController.updateUser)
+router.post(`${userPrefix}/details`, UserController.getUserDetails)
 
 export { router as userRoutes }

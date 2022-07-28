@@ -2,6 +2,7 @@ import mongoose, { Schema, Model, Document } from 'mongoose';
 
 export interface UserInterface {
   token: string; email: string; username: string; userType: string
+  displayName: string; region: string; language: string;
   password: string; avatarUrl: string; isVerified: Boolean,
   referalCode: string; isActivated: Boolean, isGoogleAccount: Boolean,
 }
@@ -9,22 +10,38 @@ export interface UserInterface {
 export interface UserDoc extends UserInterface, Document { }
 
 const userSchema = new Schema({
+  email: { type: Schema.Types.String, required: true, unique: true, },
+  token: { type: Schema.Types.String, required: false, unique: true },
+  region: { type: Schema.Types.String, required: false, unique: false },
+  language: { type: Schema.Types.String, required: false, unique: false },
+  userType: { type: Schema.Types.String, enum: ['ADMIN', 'USER', 'GUEST'], default: 'USER' },
+  password: { type: Schema.Types.String, requried: true, unique: false },
   username: { type: Schema.Types.String, required: true, unique: true, },
   avatarUrl: { type: Schema.Types.String, required: false, },
-  email: { type: Schema.Types.String, required: true, unique: true, },
-  password: { type: Schema.Types.String, requried: true, },
-  isGoogleAccount: { type: Schema.Types.Boolean, required: true },
   isVerified: { type: Schema.Types.Boolean, required: true },
-  isActivated: { type: Schema.Types.Boolean, required: true },
-  token: { type: Schema.Types.String, },
-  userType: { type: Schema.Types.String, enum: ['ADMIN', 'USER', 'GUEST'], default: 'USER' },
   referalCode: { type: Schema.Types.String, requird: true },
+  isActivated: { type: Schema.Types.Boolean, required: true },
+  displayName: { type: Schema.Types.String, required: false, unique: false, },
+  isGoogleAccount: { type: Schema.Types.Boolean, required: true },
 },
 );
 
 export class User {
   user: UserInterface;
   constructor(user: UserInterface) { this.user = user }
+
+  setRegion(region: UserInterface["region"]) {
+    this.user.region = region;
+    return this;
+  }
+  setDisplayName(displayName: UserInterface["displayName"]) {
+    this.user.displayName = displayName;
+    return this;
+  }
+  setLanguage(language: UserInterface["language"]) {
+    this.user.language = language;
+    return this;
+  }
 
   setAvatar(avatarUrl: UserInterface["avatarUrl"]) {
     this.user.avatarUrl = avatarUrl;
