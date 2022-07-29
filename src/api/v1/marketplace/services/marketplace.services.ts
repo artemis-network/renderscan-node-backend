@@ -113,15 +113,15 @@ export class MarketplaceServices {
 
     static convertJSONToStringValues = async (json: object) => {
         const text = JSON.stringify(json)
-        const newObj = text.replace(/:([^"[{][0-9A-Za-z]*)([,\]\}]?)/g, ':\"$1\"$2').replace('"/"',"/")
-        try{
+        const newObj = text.replace(/:([^"[{][0-9A-Za-z]*)([,\]\}]?)/g, ':\"$1\"$2').replace('"/"', "/")
+        try {
             const newJson = JSON.parse(newObj)
             return newJson
         }
-        catch (e){
+        catch (e) {
             console.log(e)
             console.log(newObj)
-            return 
+            return
         }
     }
 
@@ -273,8 +273,8 @@ export class MarketplaceServices {
             while (i < limit) {
                 var slug = slugs[Math.floor(Math.random() * slugs.length)];
                 const nfts = await this.getCollectionNFTsFromSlugService(slug.trim(), 5)
-                for(let nft of nfts){
-                    if(nft['lastPrice'] != '0'){
+                for (let nft of nfts) {
+                    if (nft['lastPrice'] != '0') {
                         i = i + 1
                         results.push(nft)
                     }
@@ -298,8 +298,8 @@ export class MarketplaceServices {
             while (i < limit) {
                 var symbol = symbols[Math.floor(Math.random() * symbols.length)];
                 const nfts = await this.getCollectionNFTsFromSymbolService(symbol.trim(), 3)
-                for(let nft of nfts){
-                    if(nft['lastPrice'] != '0'){
+                for (let nft of nfts) {
+                    if (nft['lastPrice'] != '0') {
                         i = i + 1
                         results.push(nft)
                     }

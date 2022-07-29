@@ -44,23 +44,26 @@ export class PaymentsController {
 				.addKey("amount")
 				.addKey("notes")
 				.addKey("userId").getItems() as input;
+			console.log(req.body)
 			try {
 				const resp = await RazorPayServices.createOrder({
 					amount: amount, currency: "INR", receipt: recepit, notes:
 						{ key1: `${amount.toString()}, bought`, key2: notes }
 				});
+				console.log(resp)
 				logger.info(`>> create razorpay order, order_id : ${resp.id} << `)
 				const razorpay = new RazorPay({})
 					.setOrderId(resp.id)
 					.setCreatedAt(new Date(resp.created_at))
 					.setAmount(amount)
-					.setDescription(`${amount.toString()}, bought`)
+					.setDescription(`Super Ruby purchase : ${amount.toString()}, `)
 					.setNotes(notes)
 					.setStatus(resp.status)
 					.setUserId(userId)
 					.setPaymentId("")
 					.setSignature("").get();
 
+				console.log(razorpay)
 				await RazorPayServices.createRazpayTranscation(razorpay);
 				logger.info(`>> coping razorpay order into db, order_id : ${resp.id} << `)
 				return HttpFactory.STATUS_200_OK({ ...resp }, res);
@@ -103,13 +106,13 @@ export class PaymentsController {
 					await RazorPayServices.updateAndGetTranscationByOrderId(id, paymentId, signature)
 				).get()
 
-				logger.error(`>> completing and updating the razorpay order, order_id : ${id} << `)
+				logger.info(`>> completing and updating the razorpay order, order_id : ${id} << `)
 
 				const { walletId } = await InAppWalletServices.getWallet(userId) as input;
 				const transcation = new Transaction({})
 					.setAmount(amount)
 					.setCreatedAt(new Date())
-					.setDescription(`${amount.toString()}, bought`)
+					.setDescription(`Super Ruby purchase : ${amount.toString()}`)
 					.setWalletId(walletId)
 					.setPaymentType(PAYMENT_TYPE.RAZOR_PAY)
 					.setRazorPay(razorPay)
@@ -118,7 +121,7 @@ export class PaymentsController {
 
 				await InAppWalletServices.createTranascation(transcation);
 
-				logger.error(`>> creating in app transcation, for order_id : ${id} << `);
+				logger.info(`>> creating in app transcation, for order_id : ${id} << `);
 				return HttpFactory.STATUS_200_OK({ message: "Transcation successfully" }, res);
 			} catch (e) {
 				const err = e as Err;
