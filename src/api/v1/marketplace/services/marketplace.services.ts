@@ -287,6 +287,14 @@ export class MarketplaceServices {
         }
     }
 
+    static removeSolanaDuplicates = async (arr: Array<any>) => {
+        return arr.filter((thing, index, self) =>
+            index === self.findIndex((t) => (
+                t['name'] === thing['name'] && t["name"] === thing['name']
+            ))
+        )
+    }
+
     static getSolanaShowcaseNFTsService = async (limit: number) => {
         try {
             const solanaSymbolsFileName = "solanasymbols.txt"
@@ -305,7 +313,7 @@ export class MarketplaceServices {
                     }
                 }
             }
-            return results
+            return this.removeSolanaDuplicates(results);
         } catch (e) {
             console.log("error occured in updating the collection " + e)
             throw e
