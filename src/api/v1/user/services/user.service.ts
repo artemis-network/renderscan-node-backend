@@ -233,7 +233,8 @@ export class UserServices {
 			const response = {
 				region: user.region,
 				displayName: user.displayName,
-				language: user.language
+				language: user.language,
+				email: user.email
 			}
 			return response;
 		} catch (error) {
