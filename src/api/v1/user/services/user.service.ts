@@ -107,7 +107,7 @@ export class UserServices {
 			new DBObject(await UserModel.findOneAndUpdate({ token: token }, {
 				$set: {
 					isVerified: isVerified,
-					referalCode: referalCode
+					referalCode: referalCode,
 				}
 			})).get()
 		} catch (error) {
@@ -186,9 +186,10 @@ export class UserServices {
 		}
 	}
 
-	static createUser = async (username: string, email: string, hash: string, token: string, isGoogleAccount: boolean) => {
+	static createUser = async (name: string, username: string, email: string, hash: string, token: string, isGoogleAccount: boolean) => {
 		try {
 			return await UserModel.create({
+				displayName: name,
 				username: username, email: email, password: hash, token: token,
 				isActivated: false, isGoogleAccount: isGoogleAccount, isVerified: false,
 				userType: Role.USER.toString()
@@ -247,6 +248,22 @@ export class UserServices {
 		const { email, email_verified } = payload
 		const username = email.split("@")[0]
 		return { email: email, username: username, emailVerified: email_verified }
+	}
+
+	static updateEmail = async (userId: string, newEmail: string, token: string) => {
+		try {
+			const user = new DBObject(await UserModel.findById(userId)).get() as UserDoc;
+			await user?.updateOne({
+				$set: {
+					isVerified: false,
+					email: newEmail,
+					token: token
+				}
+			});
+			await user?.save();
+		} catch (error) {
+			throw error;
+		}
 	}
 
 

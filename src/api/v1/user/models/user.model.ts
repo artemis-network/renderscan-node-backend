@@ -3,8 +3,8 @@ import mongoose, { Schema, Model, Document } from 'mongoose';
 export interface UserInterface {
   token: string; email: string; username: string; userType: string
   displayName: string; region: string; language: string;
-  password: string; avatarUrl: string; isVerified: Boolean,
-  referalCode: string; isActivated: Boolean, isGoogleAccount: Boolean,
+  password: string; avatarUrl: string; isVerified: boolean;
+  referalCode: string; isActivated: boolean; isGoogleAccount: boolean;
 }
 
 export interface UserDoc extends UserInterface, Document { }
@@ -13,7 +13,6 @@ const userSchema = new Schema({
   email: { type: Schema.Types.String, required: true, unique: true, },
   token: { type: Schema.Types.String, required: false, unique: true },
   region: { type: Schema.Types.String, required: false, unique: false },
-  language: { type: Schema.Types.String, required: false, unique: false },
   userType: { type: Schema.Types.String, enum: ['ADMIN', 'USER', 'GUEST'], default: 'USER' },
   password: { type: Schema.Types.String, requried: true, unique: false },
   username: { type: Schema.Types.String, required: true, unique: true, },
@@ -42,12 +41,10 @@ export class User {
     this.user.language = language;
     return this;
   }
-
   setAvatar(avatarUrl: UserInterface["avatarUrl"]) {
     this.user.avatarUrl = avatarUrl;
     return this;
   }
-
   setEmail(email: UserInterface["email"]) {
     this.user.email = email
     return this;

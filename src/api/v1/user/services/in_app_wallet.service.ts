@@ -1,8 +1,9 @@
-import { db, TransactionInterface } from "../../db"
+import { db, TransactionInterface, BlockChainWalletInterface } from "../../db"
 import { ErrorFactory, Err, ErrorTypes } from "../../errors/error_factory";
 import { DBObject } from "../../db_object";
+import { UserServices } from "./user.service";
 
-const { InAppWalletModel, TranscationModel } = db
+const { InAppWalletModel, TranscationModel, BlockChainWalletModel } = db
 export class InAppWalletServices {
 	static createTranascation = async (transaction: TransactionInterface) => {
 		try {
@@ -23,6 +24,22 @@ export class InAppWalletServices {
 
 	static cleanUpWallet = async (userId: string) => {
 		await InAppWalletModel.findOneAndRemove({ user: userId })
+	}
+
+	static createBlockChainWallet = async (userId: string) => {
+		try {
+			const address = UserServices.createToken();
+			const wallet = await BlockChainWalletModel.create({
+				user: userId,
+				address: address,
+				chain: "",
+				isActive: true
+			});
+			await wallet.save();
+		} catch (error) {
+			const err = error as Err;
+			throw ErrorFactory.TYPE_ERROR(err.message);
+		}
 	}
 
 }

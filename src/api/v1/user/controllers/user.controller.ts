@@ -18,6 +18,7 @@ import { PAYMENT, PAYMENT_TYPE, Transaction } from '../models/transaction.model'
 import { InAppWalletServices } from '../services/in_app_wallet.service';
 import { ImageServices } from '../../images/services/image.services';
 import { RazorPayServices } from '../services/razor_pay.service';
+import { HTTP_STATUS } from '../../http/http_status';
 
 export class UserController {
 
@@ -36,7 +37,7 @@ export class UserController {
 		if (userCount <= 0) {
 			logger.info(">> create admin user")
 			const hash = await UserServices.hashPassword(ADMIN.password);
-			const user = await UserServices.createUser(ADMIN.username, ADMIN.email, hash, Role.ADMIN, false)
+			const user = await UserServices.createUser(ADMIN.username, ADMIN.username, ADMIN.email, hash, Role.ADMIN, false)
 			await UserServices.createWalletForUser(user?._id);
 			logger.info(">> successfully admin user")
 			return HttpFactory.STATUS_200_OK({ message: "OK" }, res)
@@ -48,13 +49,14 @@ export class UserController {
 	// @route /renderscan/v1/users/register
 	// @access public
 	static createUser = async (req: Request, res: Response) => {
-		type input = { username: string, password: string, email: string, referalCode: string };
+		type input = { name: string, username: string, password: string, email: string, referalCode: string };
 		type wallet_input = { walletId: string };
 		try {
-			const { username, email, password, referalCode } = new Required(req.body)
+			const { name, username, email, password, referalCode } = new Required(req.body)
 				.addKey("username")
 				.addKey("email")
 				.addKey("password")
+				.addKey("name")
 				.getItems() as input;
 			try {
 				const isUserExists = await UserServices.isUserAlreadyExists(username, email)
@@ -70,7 +72,7 @@ export class UserController {
 				try {
 					const token: string = UserServices.createToken();
 					const hash = await UserServices.hashPassword(password)
-					const newUser = await UserServices.createUser(username, email, hash, token, false);
+					const newUser = await UserServices.createUser(name, username, email, hash, token, false);
 
 					await UserServices.createWalletForUser(newUser._id)
 					logger.info(`>> creating wallet for user : ${newUser._id}`)
@@ -175,6 +177,7 @@ export class UserController {
 			const reward = await RewardService.getRewardByType(RewardType.SIGNUP);
 			const user = await UserServices.getUserByToken(token);
 			const { walletId } = await InAppWalletServices.getWallet(user._id) as wallet_input;
+			await InAppWalletServices.createBlockChainWallet(user._id);
 
 			const alreadyClaimedReward = await RazorPayServices.isUserAlreadyClaimedForSignupBonous(walletId);
 			if (alreadyClaimedReward) {
@@ -357,7 +360,7 @@ export class UserController {
 						const response = { error: false, errorType: "NONE", username: username, accessToken: token }
 						return HttpFactory.STATUS_200_OK(response, res)
 					}
-					const { _id }: any = await UserServices.createUser(username, email, "", "", true)
+					const { _id }: any = await UserServices.createUser(username, username, email, "", "", true)
 					UserServices.createWalletForUser(_id)
 					const token: string = JWT.generateJWTToken(_id);
 					const response = { error: false, errorType: "NONE", username: username, accessToken: token, };
@@ -396,7 +399,7 @@ export class UserController {
 			const { email } = new Required(req.body).addKey("email").getItems() as input;
 			const username = email.split("@")[0]
 			try {
-				const newUser = await UserServices.createUser(username, email, "", "", true)
+				const newUser = await UserServices.createUser(username, username, email, "", "", true)
 				UserServices.createWalletForUser(newUser._id)
 				const token: string = JWT.generateJWTToken(newUser._id);
 				const response = {
@@ -529,6 +532,43 @@ export class UserController {
 			const response = await UserServices.getUserDetails(userId);
 			console.log(response)
 			return HttpFactory.STATUS_200_OK({ ...response }, res)
+		} catch (error) {
+			const err = error as Err;
+			if (err.name === ErrorTypes.REQUIRED_ERROR) {
+				return HttpFactory.STATUS_400_BAD_REQUEST(err.message, res);
+			}
+			if (err.name === ErrorTypes.OBJECT_NOT_FOUND_ERROR) {
+				return HttpFactory.STATUS_404_NOT_FOUND(err.message, res);
+			}
+			return HttpFactory.STATUS_500_INTERNAL_SERVER_ERROR(err.message, res);
+		}
+	}
+
+	// @desc update new email request 
+	// @route /renderscan/v1/users/update-email
+	// @access public
+	static updateNewEmail = async (req: Request, res: Response) => {
+		try {
+			type input = { userId: string, email: string };
+			const { userId, email } = new Required(req.body).getItems() as input;
+			const isUserExists = await UserServices.isUserAlreadyExists("", email)
+			if (isUserExists) {
+				const response = { error: true, message: "Email already in use" }
+				logger.info(`>> user already exists with ${""}, ${email}`)
+				return HttpFactory.STATUS_200_OK(response, res)
+			}
+			const token = UserServices.createToken();
+			await UserServices.updateEmail(userId, email, token)
+			const html: string = EmailSender.getEmailVerificationHTML(token);
+			await EmailSender.sendMail(
+				EMAIL_CONFIG.email,
+				email,
+				"Welcome to Renderplay, Please Verify Your Email",
+				"",
+				html.toString()
+			);
+			logger.info(`>> sending verification email for ${email}`)
+			return HttpFactory.STATUS_200_OK({ message: "Verification email has been sent", error: false }, res);
 		} catch (error) {
 			const err = error as Err;
 			if (err.name === ErrorTypes.REQUIRED_ERROR) {

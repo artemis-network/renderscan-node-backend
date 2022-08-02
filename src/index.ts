@@ -13,10 +13,13 @@ import { imageRoutes } from './api/v1/images/images.routes'
 import { marketplaceRoutes } from './api/v1/marketplace/marketplace.routes'
 
 import bodyParser from 'body-parser';
+import { MarketplaceServices } from './api/v1/marketplace/services/marketplace.services';
 
 const app = express();
 
-const init = () => logger.info(`🚀  server running on port: ${PORT}`)
+const init = async () => {
+	logger.info(`🚀  server running on port: ${PORT}`)
+}
 
 app.use(cors())
 app.use(json());
@@ -25,10 +28,18 @@ app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }));
 
 app.get('/', (req, res) => res.send("🚀  WELCOME TO RENDERVERSE"))
+
+app.get('/warmup', async (req, res) => {
+	await MarketplaceServices.searchCollectionsService("ape", 2);
+	await MarketplaceServices.searchNFTService("ape", 2)
+	await MarketplaceServices.getNotableCollectionService(2)
+	return res.status(200).json({ "message": "warmed up!" })
+})
+
 app.use(pingRoutes);
 app.use(userRoutes);
 app.use(imageRoutes);
 app.use(paymentsRoutes);
 app.use(marketplaceRoutes);
 
-app.listen(PORT, () => init());
+app.listen(PORT, async () => await init());
