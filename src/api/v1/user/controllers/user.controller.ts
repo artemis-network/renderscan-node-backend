@@ -249,7 +249,7 @@ export class UserController {
 
 			const token: string = JWT.generateJWTToken(user?._id);
 			logger.info(`>> verification token done `)
-			const response = { error: false, accessToken: token, userId: user?._id, username: username, errorType: 'NONE' }
+			const response = { error: false, accessToken: token, email: user?.email, userId: user?._id, username: user?.username, errorType: 'NONE' }
 			return HttpFactory.STATUS_200_OK(response, res)
 		} catch (err) {
 			const error = err as Error;
