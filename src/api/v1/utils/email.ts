@@ -35,7 +35,7 @@ export class EmailSender {
 	}
 
 	static getEmailVerificationHTML(token: string): string {
-		const url: string = `https://api.renderverse.io/renderscan/v1/users/validate/:token`
+		const url: string = `https://api.renderverse.io/renderscan/v1/users/validate/${token}`
 		// const url: string = `http://localhost:5001/renderscan/v1/users/validate/${token}`
 		return verificationHtml(url);
 	}
