@@ -13,7 +13,8 @@ import { InAppWalletServices } from '../services/in_app_wallet.service'
 
 import { PAYMENT, PAYMENT_TYPE, TransactionInterface, } from '../models/transaction.model'
 import { logger } from '../../utils/logger'
-import { RewardType } from '../models/reward.model'
+import { Reward, RewardType } from '../models/reward.model'
+import { UserServices } from '../services/user.service'
 
 const { Transaction, RazorPay } = classes
 
@@ -186,4 +187,46 @@ export class PaymentsController {
 			return HttpFactory.STATUS_500_INTERNAL_SERVER_ERROR(`something went wrong : ${err.message}`, res)
 		}
 	}
+
+
+	// @desc daily bonous rewarding user  
+	// @route /renderscan/v1/payments/rewards/daily-bonous
+	// @access private 
+	static dailyBounous = async (req: Request, res: Response) => {
+		const users = await UserServices.getVerifiedUsers()
+		for (let i = 0; i < users.length; i++)
+			this.paymentFun(users[i]._id, RewardType.DAILY);
+		return HttpFactory.STATUS_200_OK({ message: "daily bonous awareded all users" }, res)
+	}
+
+
+	// refactor later
+	static paymentFun = async (userId: string, rewardId: RewardType) => {
+		type input_wallet = { walletId: string }
+		try {
+			const { walletId } = await InAppWalletServices.getWallet(userId) as input_wallet;
+			const reward = await RewardService.getRewardByType(rewardId)
+			logger.info(">> checking rewards <<")
+			const transaction = new Transaction({})
+				.setAmount(reward.amount)
+				.setDescription(reward.description)
+				.setPaymentType(PAYMENT_TYPE.REWARD)
+				.setWalletId(walletId)
+				.setCreatedAt(new Date())
+				.setPayment(PAYMENT.CREDIT)
+				.setRewardInfo(reward._id).get();
+			logger.info(">> completing transaction <<")
+			await InAppWalletServices.createTranascation(transaction);
+		} catch (error) {
+			const err = error as Err;
+			if (err.name === ErrorTypes.OBJECT_NOT_FOUND_ERROR ||
+				err.name === ErrorTypes.OBJECT_UN_DEFINED_ERROR
+			) {
+				logger.info(`reward not found with ${rewardId}`)
+			}
+			throw error;
+		}
+	}
+
+
 }

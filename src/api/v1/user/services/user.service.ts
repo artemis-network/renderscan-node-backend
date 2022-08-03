@@ -28,6 +28,14 @@ export class UserServices {
 		}
 	}
 
+	static getVerifiedUsers = async () => {
+		try {
+			return new DBObject(await UserModel.find().where({ isVerified: true })).get();
+		} catch (e) {
+			throw e;
+		}
+	}
+
 	static cleanUpUser = async (userId: string) => {
 		await UserModel.findByIdAndRemove(userId)
 	}

@@ -444,9 +444,10 @@ export class UserController {
 			const { userId } = new Required(JSON.parse(JSON.stringify(req.body))).addKey("userId").getItems() as input
 			const filename: string = (await UserServices.getUsername(userId)) + ".png"
 			const s3 = ImageServices.getAWSS3Object();
-			const params = ImageServices.getAvatarFileToUpload(filename, req.file?.buffer)
-			// const object = s3.upload(params)
-			// console.log(object)
+			const params = await ImageServices.getAvatarFileToUpload(filename, req.file?.buffer)
+			const object = s3.upload(params)
+			console.log(object)
+			// await UserServices.setAvtarUrl(userId, params.Key);
 			return HttpFactory.STATUS_200_OK({ message: "OK" }, res)
 		} catch (error) {
 			const err = error as Err;
