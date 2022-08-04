@@ -439,16 +439,24 @@ export class UserController {
 	// @route /renderscan/v1/users/set-avatar
 	// @access public
 	static setAvatarUrl = async (req: Request, res: Response) => {
+		if (!req.file)
+			return HttpFactory.STATUS_500_INTERNAL_SERVER_ERROR({ message: "empty file" }, res)
 		try {
 			type input = { userId: string };
 			const { userId } = new Required(JSON.parse(JSON.stringify(req.body))).addKey("userId").getItems() as input
 			const filename: string = (await UserServices.getUsername(userId)) + ".png"
 			const s3 = ImageServices.getAWSS3Object();
-			const params = await ImageServices.getAvatarFileToUpload(filename, req.file?.buffer)
-			const object = s3.upload(params)
-			console.log(object)
+			const filePath = req.file.path
+			const params = await ImageServices.getAvatarFileToUpload(filename, filePath)
+			s3.upload(params, function (err: any, data: any) {
+				if (err)
+					console.log(err, err.stack); // an error occurred
+				else {
+					ImageServices.deleteAvatarFiles(filePath)
+				}
+				return HttpFactory.STATUS_200_OK({ isUploaded: true }, res)
+			})
 			// await UserServices.setAvtarUrl(userId, params.Key);
-			return HttpFactory.STATUS_200_OK({ message: "OK" }, res)
 		} catch (error) {
 			const err = error as Err;
 			if (err.name === ErrorTypes.REQUIRED_ERROR) {

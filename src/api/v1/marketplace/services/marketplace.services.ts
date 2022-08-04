@@ -4,7 +4,7 @@ import { USER_AGENT, LOCAL_DATA_FOLDER_PATH, LOCAL_SLUGS_FOLDER_PATH, BLOCKDAEMO
 import fs from 'fs'
 import path from 'path'
 import OpenseaScraper from 'opensea-scraper'
-
+import shuffleArray from 'shuffle-array'
 export class MarketplaceServices {
 
     static getCollectionInfoFromSlugService = async (slug: string) => {
@@ -66,7 +66,7 @@ export class MarketplaceServices {
             .then(function (response) {
                 const results: any = []
                 const data = JSON.parse(JSON.stringify(response.data)).assets;
-                data.some(function (item: any) {
+                for (let item of data) {
                     var json = {
                         name: item.name?.toString() || slug + " #" + item.token_id,
                         imageUrl: item.image_url?.toString(),
@@ -471,3 +471,4 @@ export class MarketplaceServices {
     static getNFTOffersService = async (contract: string, token_id: string) => {
     }
 }
+

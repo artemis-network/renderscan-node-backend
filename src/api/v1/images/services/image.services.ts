@@ -32,14 +32,13 @@ export class ImageServices {
         return params
     }
 
-    static getAvatarFileToUpload = async (filename: string, buffer: any) => {
+    static getAvatarFileToUpload = async (filename: string, filePath: string) => {
         try {
-            const base64str = Buffer.from(buffer, 'binary').toString('base64');
-            const b = Buffer.from(base64str, 'base64');
+            const blob = fs.readFileSync(filePath)
             var params = {
                 Bucket: AWS_CREDS.avatarContainer,
                 Key: filename,
-                Body: b,
+                Body: blob,
                 ContentType: 'image/png'
             };
             return params
@@ -85,6 +84,19 @@ export class ImageServices {
     static deleteUserFiles = (filename: string, username: string) => {
         const filePath = path.join(IMAGE_CREDS.localImageFolderPath, username, filename)
 
+        var isDeleted: boolean = false
+        if (fs.existsSync(filePath)) {
+            console.log('Deleting file at ' + filePath);
+            fs.unlinkSync(filePath);
+            isDeleted = true
+        }
+        else {
+            console.log('File not found, so not deleting.');
+        }
+        return isDeleted;
+    }
+
+    static deleteAvatarFiles = (filePath: string) => {
         var isDeleted: boolean = false
         if (fs.existsSync(filePath)) {
             console.log('Deleting file at ' + filePath);

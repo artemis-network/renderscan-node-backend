@@ -11,8 +11,7 @@ import { InAppWalletController } from './controllers/in_app_wallet.controller'
 
 import { userPrefix } from '../config'
 
-const storage = multer.memoryStorage()
-const upload = multer({ storage: storage })
+const upload = multer({dest: 'uploads/'});
 
 router.post(`${userPrefix}/init`, UserController.initialize);
 router.post(`${userPrefix}/login`, UserController.loginUser);
