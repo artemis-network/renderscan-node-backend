@@ -72,7 +72,6 @@ export class MarketplaceController {
         const { slug, offset } = req.body
         try {
             let nfts;
-
             if (offset == 0) {
                 nfts = await MarketplaceServices.getTopTwentyCollectionNFTsFromSlug(slug)
             }
@@ -90,6 +89,7 @@ export class MarketplaceController {
             }
 
         } catch (e) {
+            console.log("error " + e)
             return HttpFactory.STATUS_500_INTERNAL_SERVER_ERROR({ message: e }, res)
         }
     }

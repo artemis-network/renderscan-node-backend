@@ -37,6 +37,7 @@ export class MarketplaceServices {
         }
         let resp = await OpenseaScraper.offers(slug, options);
         let nfts = JSON.parse(JSON.stringify(resp)).offers
+        console.log(nfts)
         const results = []
         for (let nft of nfts) {
             var json = {
@@ -86,10 +87,11 @@ export class MarketplaceServices {
     }
 
     static getCollectionNFTsFromSymbolService = async (symbol: string, limit: number) => {
-        let url = "https://api-mainnet.magiceden.dev/v2/collections/" + symbol + "/activities?offset=0&limit=" + limit
+        let corsURL = "https://cors.renderverse.workers.dev/?u="
+        let url = encodeURIComponent("https://api-mainnet.magiceden.dev/v2/collections/" + symbol + "/activities?offset=0&limit=" + limit)
         var config = {
             method: 'get',
-            url: url,
+            url: corsURL + url,
             headers: {
                 'User-Agent': USER_AGENT
             }
