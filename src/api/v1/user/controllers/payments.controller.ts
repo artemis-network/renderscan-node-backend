@@ -13,7 +13,10 @@ import { InAppWalletServices } from '../services/in_app_wallet.service'
 
 import { PAYMENT, PAYMENT_TYPE, TransactionInterface, } from '../models/transaction.model'
 import { logger } from '../../utils/logger'
-import { RewardType } from '../models/reward.model'
+import { Reward, RewardType } from '../models/reward.model'
+import { UserServices } from '../services/user.service'
+import { NotificationService } from '../services/notification.service'
+import { has } from 'cheerio/lib/api/traversing'
 
 const { Transaction, RazorPay } = classes
 
@@ -44,23 +47,26 @@ export class PaymentsController {
 				.addKey("amount")
 				.addKey("notes")
 				.addKey("userId").getItems() as input;
+			console.log(req.body)
 			try {
 				const resp = await RazorPayServices.createOrder({
 					amount: amount, currency: "INR", receipt: recepit, notes:
 						{ key1: `${amount.toString()}, bought`, key2: notes }
 				});
+				console.log(resp)
 				logger.info(`>> create razorpay order, order_id : ${resp.id} << `)
 				const razorpay = new RazorPay({})
 					.setOrderId(resp.id)
 					.setCreatedAt(new Date(resp.created_at))
 					.setAmount(amount)
-					.setDescription(`${amount.toString()}, bought`)
+					.setDescription(`Super Ruby purchase : ${amount.toString()}, `)
 					.setNotes(notes)
 					.setStatus(resp.status)
 					.setUserId(userId)
 					.setPaymentId("")
 					.setSignature("").get();
 
+				console.log(razorpay)
 				await RazorPayServices.createRazpayTranscation(razorpay);
 				logger.info(`>> coping razorpay order into db, order_id : ${resp.id} << `)
 				return HttpFactory.STATUS_200_OK({ ...resp }, res);
@@ -103,13 +109,13 @@ export class PaymentsController {
 					await RazorPayServices.updateAndGetTranscationByOrderId(id, paymentId, signature)
 				).get()
 
-				logger.error(`>> completing and updating the razorpay order, order_id : ${id} << `)
+				logger.info(`>> completing and updating the razorpay order, order_id : ${id} << `)
 
 				const { walletId } = await InAppWalletServices.getWallet(userId) as input;
 				const transcation = new Transaction({})
 					.setAmount(amount)
 					.setCreatedAt(new Date())
-					.setDescription(`${amount.toString()}, bought`)
+					.setDescription(`Super Ruby purchase : ${amount.toString()}`)
 					.setWalletId(walletId)
 					.setPaymentType(PAYMENT_TYPE.RAZOR_PAY)
 					.setRazorPay(razorPay)
@@ -118,7 +124,7 @@ export class PaymentsController {
 
 				await InAppWalletServices.createTranascation(transcation);
 
-				logger.error(`>> creating in app transcation, for order_id : ${id} << `);
+				logger.info(`>> creating in app transcation, for order_id : ${id} << `);
 				return HttpFactory.STATUS_200_OK({ message: "Transcation successfully" }, res);
 			} catch (e) {
 				const err = e as Err;
@@ -183,4 +189,89 @@ export class PaymentsController {
 			return HttpFactory.STATUS_500_INTERNAL_SERVER_ERROR(`something went wrong : ${err.message}`, res)
 		}
 	}
+
+
+	// @desc daily bonous rewarding user  
+	// @route /renderscan/v1/payments/rewards/daily-bonous
+	// @access private 
+	static dailyBounous = async (req: Request, res: Response) => {
+		const users = await UserServices.getVerifiedUsers()
+		for (let i = 0; i < users.length; i++) {
+			await NotificationService.sendNotificationToUser(users[i]._id, "Daily bonous", true, "Claim reward")
+			this.paymentFun(users[i]._id, RewardType.DAILY);
+		}
+		return HttpFactory.STATUS_200_OK({ message: "daily bonous awareded all users" }, res)
+	}
+
+
+	// @desc payment notifications for user  
+	// @route /renderscan/v1/payments/notifications/update
+	// @access public 
+	static sendRewardNotification = async (req: Request, res: Response) => {
+		type input = { userId: string, hasNotification: boolean }
+		try {
+			const { userId, hasNotification } = new Required(req.body).getItems() as input;
+			console.log(req.body)
+			await NotificationService.sendNotificationToUser(userId, "", hasNotification, "")
+			return HttpFactory.STATUS_200_OK({ message: "Daily rewward claimed" }, res)
+		} catch (e) {
+			const err = e as Err;
+			if (err.name === ErrorTypes.TYPE_ERROR) {
+				logger.info(`invalid type input ${err.message}`)
+				return HttpFactory.STATUS_400_BAD_REQUEST(`bad request : ${err.message}`, res)
+			}
+			return HttpFactory.STATUS_500_INTERNAL_SERVER_ERROR(`something went wrong : ${err.message}`, res)
+
+		}
+	}
+
+	// @desc get notififactions  
+	// @route /renderscan/v1/payments/notifications
+	// @access public 
+	static getNotificationsForUser = async (req: Request, res: Response) => {
+		type input = { userId: string }
+		try {
+			const { userId } = new Required(req.body).getItems() as input;
+			const { notification, hasNotification, message } = await NotificationService.checkForNotifications(userId)
+			return HttpFactory.STATUS_200_OK({ notification, hasNotification, message }, res)
+		} catch (e) {
+			const err = e as Err;
+			if (err.name === ErrorTypes.TYPE_ERROR) {
+				logger.info(`invalid type input ${err.message}`)
+				return HttpFactory.STATUS_400_BAD_REQUEST(`bad request : ${err.message}`, res)
+			}
+			return HttpFactory.STATUS_500_INTERNAL_SERVER_ERROR(`something went wrong : ${err.message}`, res)
+
+		}
+	}
+
+	// refactor later
+	static paymentFun = async (userId: string, rewardId: RewardType) => {
+		type input_wallet = { walletId: string }
+		try {
+			const { walletId } = await InAppWalletServices.getWallet(userId) as input_wallet;
+			const reward = await RewardService.getRewardByType(rewardId)
+			logger.info(">> checking rewards <<")
+			const transaction = new Transaction({})
+				.setAmount(reward.amount)
+				.setDescription(reward.description)
+				.setPaymentType(PAYMENT_TYPE.REWARD)
+				.setWalletId(walletId)
+				.setCreatedAt(new Date())
+				.setPayment(PAYMENT.CREDIT)
+				.setRewardInfo(reward._id).get();
+			logger.info(">> completing transaction <<")
+			await InAppWalletServices.createTranascation(transaction);
+		} catch (error) {
+			const err = error as Err;
+			if (err.name === ErrorTypes.OBJECT_NOT_FOUND_ERROR ||
+				err.name === ErrorTypes.OBJECT_UN_DEFINED_ERROR
+			) {
+				logger.info(`reward not found with ${rewardId}`)
+			}
+			throw error;
+		}
+	}
+
+
 }

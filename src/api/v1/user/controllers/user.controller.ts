@@ -18,6 +18,7 @@ import { PAYMENT, PAYMENT_TYPE, Transaction } from '../models/transaction.model'
 import { InAppWalletServices } from '../services/in_app_wallet.service';
 import { ImageServices } from '../../images/services/image.services';
 import { RazorPayServices } from '../services/razor_pay.service';
+import { HTTP_STATUS } from '../../http/http_status';
 
 export class UserController {
 
@@ -36,7 +37,7 @@ export class UserController {
 		if (userCount <= 0) {
 			logger.info(">> create admin user")
 			const hash = await UserServices.hashPassword(ADMIN.password);
-			const user = await UserServices.createUser(ADMIN.username, ADMIN.email, hash, Role.ADMIN, false)
+			const user = await UserServices.createUser(ADMIN.username, ADMIN.username, ADMIN.email, hash, Role.ADMIN, false)
 			await UserServices.createWalletForUser(user?._id);
 			logger.info(">> successfully admin user")
 			return HttpFactory.STATUS_200_OK({ message: "OK" }, res)
@@ -48,18 +49,18 @@ export class UserController {
 	// @route /renderscan/v1/users/register
 	// @access public
 	static createUser = async (req: Request, res: Response) => {
-		type input = { username: string, password: string, email: string, referalCode: string };
+		type input = { name: string, username: string, password: string, email: string, referalCode: string };
 		type wallet_input = { walletId: string };
-		console.log(req.body);
 		try {
-			const { username, email, password, referalCode } = new Required(req.body)
+			const { name, username, email, password, referalCode } = new Required(req.body)
 				.addKey("username")
 				.addKey("email")
 				.addKey("password")
+				.addKey("name")
 				.getItems() as input;
 			try {
-				const isExists = await UserServices.isUserAlreadyExists(username, email)
-				if (isExists) {
+				const isUserExists = await UserServices.isUserAlreadyExists(username, email)
+				if (isUserExists) {
 					const response = {
 						error: true,
 						errorType: "USER_ALREADY_EXIST",
@@ -71,7 +72,7 @@ export class UserController {
 				try {
 					const token: string = UserServices.createToken();
 					const hash = await UserServices.hashPassword(password)
-					const newUser = await UserServices.createUser(username, email, hash, token, false);
+					const newUser = await UserServices.createUser(name, username, email, hash, token, false);
 
 					await UserServices.createWalletForUser(newUser._id)
 					logger.info(`>> creating wallet for user : ${newUser._id}`)
@@ -106,27 +107,35 @@ export class UserController {
 					);
 
 					logger.info(`>> sending verification email for ${email}`)
-					const response = { message: "Successfully created", errorType: "NONE", error: false };
+					const response = { message: "Successfully signup successfully, verification email has sent", errorType: "NONE", error: false };
 					return HttpFactory.STATUS_200_OK(response, res)
 
 				} catch (error) {
 					const err = error as Err;
 					this.cleanRemoveUser(email)
 					if (err.name === ErrorTypes.TYPE_ERROR) {
+						const response = {
+							error: true,
+							errorType: "USER_ALREADY_EXIST",
+							message: "Bad request",
+						}
 						logger.error(`>> bad request : ${err.message}`)
-
-						return HttpFactory.STATUS_400_BAD_REQUEST(err, res);
+						return HttpFactory.STATUS_200_OK(response, res)
 					}
 					if (err.name === ErrorTypes.OBJECT_NOT_FOUND_ERROR ||
 						err.name === ErrorTypes.OBJECT_UN_DEFINED_ERROR) {
-						const response = { error: true, invalidReferalCode: true }
+						const response = { error: true, invalidReferalCode: true, message: "Invalid referal code" }
 						logger.error(`invalid referal code : ${err.message}`)
 						return HttpFactory.STATUS_200_OK(response, res)
 					}
 					if (err.name === ErrorTypes.EMAIL_ERROR) {
 						logger.error(`>> issue with email config : ${err.message}`)
-						return HttpFactory.STATUS_500_INTERNAL_SERVER_ERROR(err, res)
-
+						const response = {
+							error: true,
+							errorType: "USER_ALREADY_EXIST",
+							message: "Internal Server Error",
+						}
+						return HttpFactory.STATUS_200_OK(response, res)
 					}
 					return HttpFactory.STATUS_500_INTERNAL_SERVER_ERROR(err, res)
 				}
@@ -134,7 +143,7 @@ export class UserController {
 				this.cleanRemoveUser(email)
 				const error = err as Err;
 				if (error.name === ErrorTypes.INVALID_REFERAL_CODE) {
-					const response = { error: true, invalidReferalCode: true }
+					const response = { error: true, invalidReferalCode: true, message: "invalid referal code" }
 					logger.error(`invalid referal code : ${error.message}`)
 					return HttpFactory.STATUS_200_OK(response, res)
 				}
@@ -168,6 +177,7 @@ export class UserController {
 			const reward = await RewardService.getRewardByType(RewardType.SIGNUP);
 			const user = await UserServices.getUserByToken(token);
 			const { walletId } = await InAppWalletServices.getWallet(user._id) as wallet_input;
+			await InAppWalletServices.createBlockChainWallet(user._id);
 
 			const alreadyClaimedReward = await RazorPayServices.isUserAlreadyClaimedForSignupBonous(walletId);
 			if (alreadyClaimedReward) {
@@ -239,7 +249,7 @@ export class UserController {
 
 			const token: string = JWT.generateJWTToken(user?._id);
 			logger.info(`>> verification token done `)
-			const response = { error: false, accessToken: token, userId: user?._id, username: username, errorType: 'NONE' }
+			const response = { error: false, accessToken: token, email: user?.email, userId: user?._id, username: user?.username, errorType: 'NONE' }
 			return HttpFactory.STATUS_200_OK(response, res)
 		} catch (err) {
 			const error = err as Error;
@@ -350,7 +360,7 @@ export class UserController {
 						const response = { error: false, errorType: "NONE", username: username, accessToken: token }
 						return HttpFactory.STATUS_200_OK(response, res)
 					}
-					const { _id }: any = await UserServices.createUser(username, email, "", "", true)
+					const { _id }: any = await UserServices.createUser(username, username, email, "", "", true)
 					UserServices.createWalletForUser(_id)
 					const token: string = JWT.generateJWTToken(_id);
 					const response = { error: false, errorType: "NONE", username: username, accessToken: token, };
@@ -389,7 +399,7 @@ export class UserController {
 			const { email } = new Required(req.body).addKey("email").getItems() as input;
 			const username = email.split("@")[0]
 			try {
-				const newUser = await UserServices.createUser(username, email, "", "", true)
+				const newUser = await UserServices.createUser(username, username, email, "", "", true)
 				UserServices.createWalletForUser(newUser._id)
 				const token: string = JWT.generateJWTToken(newUser._id);
 				const response = {
@@ -434,9 +444,10 @@ export class UserController {
 			const { userId } = new Required(JSON.parse(JSON.stringify(req.body))).addKey("userId").getItems() as input
 			const filename: string = (await UserServices.getUsername(userId)) + ".png"
 			const s3 = ImageServices.getAWSS3Object();
-			const params = ImageServices.getAvatarFileToUpload(filename, req.file?.buffer)
-			// const object = s3.upload(params)
-			// console.log(object)
+			const params = await ImageServices.getAvatarFileToUpload(filename, req.file?.buffer)
+			const object = s3.upload(params)
+			console.log(object)
+			// await UserServices.setAvtarUrl(userId, params.Key);
 			return HttpFactory.STATUS_200_OK({ message: "OK" }, res)
 		} catch (error) {
 			const err = error as Err;
@@ -477,6 +488,88 @@ export class UserController {
 			const { userId } = new Required(req.body).getItems() as input;
 			const referals: any[] = await ReferalService.getReferals(userId)
 			return HttpFactory.STATUS_200_OK({ referals: referals }, res)
+		} catch (error) {
+			const err = error as Err;
+			if (err.name === ErrorTypes.REQUIRED_ERROR) {
+				return HttpFactory.STATUS_400_BAD_REQUEST(err.message, res);
+			}
+			if (err.name === ErrorTypes.OBJECT_NOT_FOUND_ERROR) {
+				return HttpFactory.STATUS_404_NOT_FOUND(err.message, res);
+			}
+			return HttpFactory.STATUS_500_INTERNAL_SERVER_ERROR(err.message, res);
+		}
+	}
+
+	// @desc update user
+	// @route /renderscan/v1/users/update
+	// @access public
+	static updateUser = async (req: Request, res: Response) => {
+		try {
+			type input = { userId: string, displayName: string; language: string; region: string };
+			const { userId, displayName, language, region } = new Required(req.body).getItems() as input;
+			await UserServices.updateUser(userId, region, language, displayName);
+			return HttpFactory.STATUS_200_OK({ message: "User updated successfully", error: false }, res)
+		} catch (error) {
+			const err = error as Err;
+			if (err.name === ErrorTypes.REQUIRED_ERROR) {
+				return HttpFactory.STATUS_400_BAD_REQUEST(err.message, res);
+			}
+			if (err.name === ErrorTypes.OBJECT_NOT_FOUND_ERROR) {
+				return HttpFactory.STATUS_404_NOT_FOUND(err.message, res);
+			}
+			return HttpFactory.STATUS_500_INTERNAL_SERVER_ERROR(err.message, res);
+		}
+	}
+
+
+	// @desc user details
+	// @route /renderscan/v1/users/details
+	// @access public
+	static getUserDetails = async (req: Request, res: Response) => {
+		try {
+			type input = { userId: string };
+			const { userId } = new Required(req.body).getItems() as input;
+			console.log(userId)
+			const response = await UserServices.getUserDetails(userId);
+			console.log(response)
+			return HttpFactory.STATUS_200_OK({ ...response }, res)
+		} catch (error) {
+			const err = error as Err;
+			if (err.name === ErrorTypes.REQUIRED_ERROR) {
+				return HttpFactory.STATUS_400_BAD_REQUEST(err.message, res);
+			}
+			if (err.name === ErrorTypes.OBJECT_NOT_FOUND_ERROR) {
+				return HttpFactory.STATUS_404_NOT_FOUND(err.message, res);
+			}
+			return HttpFactory.STATUS_500_INTERNAL_SERVER_ERROR(err.message, res);
+		}
+	}
+
+	// @desc update new email request 
+	// @route /renderscan/v1/users/update-email
+	// @access public
+	static updateNewEmail = async (req: Request, res: Response) => {
+		try {
+			type input = { userId: string, email: string };
+			const { userId, email } = new Required(req.body).getItems() as input;
+			const isUserExists = await UserServices.isUserAlreadyExists("", email)
+			if (isUserExists) {
+				const response = { error: true, message: "Email already in use" }
+				logger.info(`>> user already exists with ${""}, ${email}`)
+				return HttpFactory.STATUS_200_OK(response, res)
+			}
+			const token = UserServices.createToken();
+			await UserServices.updateEmail(userId, email, token)
+			const html: string = EmailSender.getEmailVerificationHTML(token);
+			await EmailSender.sendMail(
+				EMAIL_CONFIG.email,
+				email,
+				"Welcome to Renderplay, Please Verify Your Email",
+				"",
+				html.toString()
+			);
+			logger.info(`>> sending verification email for ${email}`)
+			return HttpFactory.STATUS_200_OK({ message: "Verification email has been sent", error: false }, res);
 		} catch (error) {
 			const err = error as Err;
 			if (err.name === ErrorTypes.REQUIRED_ERROR) {

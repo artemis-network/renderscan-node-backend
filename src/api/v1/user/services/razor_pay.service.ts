@@ -61,7 +61,7 @@ export class RazorPayServices {
 
 	static getTranscations = async (walletId: string) => {
 		try {
-			return new DBObject(await TranscationModel.find().where({ walletId: walletId })).get();
+			return new DBObject(await TranscationModel.find().where({ walletId: walletId }).sort({ createdAt: -1 })).get();
 		} catch (error) {
 			throw error;
 		}

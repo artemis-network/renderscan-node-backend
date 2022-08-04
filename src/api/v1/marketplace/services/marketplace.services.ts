@@ -74,7 +74,7 @@ export class MarketplaceServices {
                         tokenId: item.token_id?.toString()
                     }
                     results.push(json)
-                })
+                }
                 return results;
             })
             .catch(function (error) {
@@ -99,15 +99,15 @@ export class MarketplaceServices {
             .then(function (response) {
                 const results: any = []
                 const data = JSON.parse(JSON.stringify(response.data));
-                data.forEach(function (item: any) {
+                for (let i = 0; i < limit; i++) {
                     var json = {
-                        name: item.collection?.toString(),
-                        imageUrl: item.image?.toString(),
-                        lastPrice: item.price?.toString(),
-                        contract: item.tokenMint?.toString()
+                        name: data[i].collection?.toString(),
+                        imageUrl: data[i].image?.toString(),
+                        lastPrice: data[i].price?.toString(),
+                        contract: data[i].tokenMint?.toString()
                     }
                     results.push(json)
-                })
+                }
                 return results;
             })
             .catch(function (error) {
@@ -300,18 +300,19 @@ export class MarketplaceServices {
             var fs = require('fs');
             var slugs = fs.readFileSync(showcaseSlugsFilePath)?.toString().split("\n");
             let i = 0
+            let j = 0
+            slugs = shuffleArray(slugs)
             const results: any = []
             while (i < limit) {
-                var slug = slugs[Math.floor(Math.random() * slugs.length)];
-                const nfts = await this.getCollectionNFTsFromSlugService(slug.trim(), 5)
+                var slug = slugs[j];
+                const nfts = await this.getCollectionNFTsFromSlugService(slug.trim(), 3)
                 for (let nft of nfts) {
-                    if (nft['lastPrice'] != '0') {
-                        i = i + 1
-                        results.push(nft)
-                    }
+                    results.push(nft)
+                    i += 1;
                 }
+                j += 1;
             }
-            return results
+            return results;
         } catch (e) {
             console.log("error occured in updating the collection " + e)
             throw e
@@ -325,18 +326,18 @@ export class MarketplaceServices {
             var fs = require('fs');
             var symbols = fs.readFileSync(solanaSymbolsFilePath)?.toString().split("\n");
             let i = 0
+            let j = 0
             const results: any = []
             while (i < limit) {
-                var symbol = symbols[Math.floor(Math.random() * symbols.length)];
-                const nfts = await this.getCollectionNFTsFromSymbolService(symbol.trim(), 3)
+                var symbol = symbols[j];
+                j += 1;
+                const nfts = await this.getCollectionNFTsFromSymbolService(symbol.trim(), 2)
                 for (let nft of nfts) {
-                    if (nft['lastPrice'] != '0') {
-                        i = i + 1
-                        results.push(nft)
-                    }
+                    results.push(nft)
+                    i = i + 1
                 }
             }
-            return results
+            return results;
         } catch (e) {
             console.log("error occured in updating the collection " + e)
             throw e

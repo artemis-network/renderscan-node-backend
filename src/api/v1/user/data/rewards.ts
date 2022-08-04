@@ -10,5 +10,10 @@ export const rewards: RewardInterface[] = [
 		amount: 200,
 		description: "Signup bonous",
 		type: RewardType.SIGNUP
-	}
+	},
+	{
+		amount: 50,
+		description: "Daily Bonous",
+		type: RewardType.DAILY
+	},
 ]
