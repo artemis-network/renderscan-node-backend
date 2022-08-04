@@ -15,6 +15,8 @@ import { PAYMENT, PAYMENT_TYPE, TransactionInterface, } from '../models/transact
 import { logger } from '../../utils/logger'
 import { Reward, RewardType } from '../models/reward.model'
 import { UserServices } from '../services/user.service'
+import { NotificationService } from '../services/notification.service'
+import { has } from 'cheerio/lib/api/traversing'
 
 const { Transaction, RazorPay } = classes
 
@@ -194,11 +196,53 @@ export class PaymentsController {
 	// @access private 
 	static dailyBounous = async (req: Request, res: Response) => {
 		const users = await UserServices.getVerifiedUsers()
-		for (let i = 0; i < users.length; i++)
+		for (let i = 0; i < users.length; i++) {
+			await NotificationService.sendNotificationToUser(users[i]._id, "Daily bonous", true, "Claim reward")
 			this.paymentFun(users[i]._id, RewardType.DAILY);
+		}
 		return HttpFactory.STATUS_200_OK({ message: "daily bonous awareded all users" }, res)
 	}
 
+
+	// @desc payment notifications for user  
+	// @route /renderscan/v1/payments/notifications/update
+	// @access public 
+	static sendRewardNotification = async (req: Request, res: Response) => {
+		type input = { userId: string, hasNotification: boolean }
+		try {
+			const { userId, hasNotification } = new Required(req.body).getItems() as input;
+			await NotificationService.sendNotificationToUser(userId, "Daily bonous", true, "Claim reward")
+			return HttpFactory.STATUS_200_OK({ message: "Daily rewward claimed" }, res)
+		} catch (e) {
+			const err = e as Err;
+			if (err.name === ErrorTypes.TYPE_ERROR) {
+				logger.info(`invalid type input ${err.message}`)
+				return HttpFactory.STATUS_400_BAD_REQUEST(`bad request : ${err.message}`, res)
+			}
+			return HttpFactory.STATUS_500_INTERNAL_SERVER_ERROR(`something went wrong : ${err.message}`, res)
+
+		}
+	}
+
+	// @desc get notififactions  
+	// @route /renderscan/v1/payments/notifications
+	// @access public 
+	static getNotificationsForUser = async (req: Request, res: Response) => {
+		type input = { userId: string }
+		try {
+			const { userId } = new Required(req.body).getItems() as input;
+			const notification = await NotificationService.checkForNotifications(userId)
+			return HttpFactory.STATUS_200_OK(notification, res)
+		} catch (e) {
+			const err = e as Err;
+			if (err.name === ErrorTypes.TYPE_ERROR) {
+				logger.info(`invalid type input ${err.message}`)
+				return HttpFactory.STATUS_400_BAD_REQUEST(`bad request : ${err.message}`, res)
+			}
+			return HttpFactory.STATUS_500_INTERNAL_SERVER_ERROR(`something went wrong : ${err.message}`, res)
+
+		}
+	}
 
 	// refactor later
 	static paymentFun = async (userId: string, rewardId: RewardType) => {
