@@ -49,15 +49,14 @@ export class MarketplaceController {
 
     }
 
-    static getCollectionFromSlug = async (req: Request, res: Response) => {
-        const { slug, limit } = req.body
+    static getCollectionInfo = async (req: Request, res: Response) => {
+        const { slug } = req.body
         try {
             const info = await MarketplaceServices.getCollectionInfoFromSlugService(slug)
-            const nfts = await MarketplaceServices.getCollectionNFTsFromSlugService(slug, limit)
 
-            if (info != null && nfts != null) {
-                console.log("Received collection  from slug")
-                return HttpFactory.STATUS_200_OK({ CollectionInfo: info, CollectionNFTs: nfts }, res)
+            if (info != null) {
+                console.log("Received collection info  from slug")
+                return HttpFactory.STATUS_200_OK({ CollectionInfo: info }, res)
 
             }
             else {
@@ -69,7 +68,89 @@ export class MarketplaceController {
         }
     }
 
-    static getNFTFromContract = async (req: Request, res: Response) => {
+    static getCollectionNFTs = async (req: Request, res: Response) => {
+        const { slug, offset } = req.body
+        try {
+            let nfts;
+
+            if (offset == 0) {
+                nfts = await MarketplaceServices.getTopTwentyCollectionNFTsFromSlug(slug)
+            }
+            else if (offset == 1) {
+                nfts = await MarketplaceServices.getCollectionNFTsFromSlugService(slug, 50)
+            }
+
+            if (nfts != null) {
+                console.log("Received collection  from slug")
+                return HttpFactory.STATUS_200_OK({ CollectionNFTs: nfts }, res)
+
+            }
+            else {
+                return HttpFactory.STATUS_200_OK({ Info: "Response is empty from service" }, res)
+            }
+
+        } catch (e) {
+            return HttpFactory.STATUS_500_INTERNAL_SERVER_ERROR({ message: e }, res)
+        }
+    }
+
+    static getNFTListings = async (req: Request, res: Response) => {
+        const { contract, tokenId } = req.body
+        try {
+
+            const listings = await MarketplaceServices.getNFTListingsService(contract, tokenId)
+            if (listings != null) {
+                console.log("Received listings of NFT")
+                return HttpFactory.STATUS_200_OK({ Listings: listings }, res)
+
+            }
+            else {
+                return HttpFactory.STATUS_200_OK({ Info: "Response is empty from service" }, res)
+            }
+
+        } catch (e) {
+            return HttpFactory.STATUS_500_INTERNAL_SERVER_ERROR({ message: e }, res)
+        }
+    }
+
+    static getNFTOffers = async (req: Request, res: Response) => {
+        const { contract, tokenId } = req.body
+        try {
+            const listings = await MarketplaceServices.getNFTOffersService(contract, tokenId)
+            if (listings != null) {
+                console.log("Received offers of NFT")
+                return HttpFactory.STATUS_200_OK({ Listings: listings }, res)
+
+            }
+            else {
+                return HttpFactory.STATUS_200_OK({ Info: "Response is empty from service" }, res)
+            }
+
+        } catch (e) {
+            return HttpFactory.STATUS_500_INTERNAL_SERVER_ERROR({ message: e }, res)
+        }
+    }
+
+    static getNFTLatestPrice = async (req: Request, res: Response) => {
+        const { contract, tokenId } = req.body
+        try {
+
+            const price = await MarketplaceServices.getNFTlatestPriceService(contract, tokenId)
+            if (price != null) {
+                console.log("Received price of NFT")
+                return HttpFactory.STATUS_200_OK({ price: price }, res)
+
+            }
+            else {
+                return HttpFactory.STATUS_200_OK({ Info: "Response is empty from service" }, res)
+            }
+
+        } catch (e) {
+            return HttpFactory.STATUS_500_INTERNAL_SERVER_ERROR({ message: e }, res)
+        }
+    }
+
+    static getNFTInfo = async (req: Request, res: Response) => {
         const { contract, token_id, chain } = req.body
         try {
             let resp;
