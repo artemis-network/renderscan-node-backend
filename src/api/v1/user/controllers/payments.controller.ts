@@ -211,7 +211,8 @@ export class PaymentsController {
 		type input = { userId: string, hasNotification: boolean }
 		try {
 			const { userId, hasNotification } = new Required(req.body).getItems() as input;
-			await NotificationService.sendNotificationToUser(userId, "Daily bonous", true, "Claim reward")
+			console.log(req.body)
+			await NotificationService.sendNotificationToUser(userId, "", hasNotification, "")
 			return HttpFactory.STATUS_200_OK({ message: "Daily rewward claimed" }, res)
 		} catch (e) {
 			const err = e as Err;
@@ -231,8 +232,8 @@ export class PaymentsController {
 		type input = { userId: string }
 		try {
 			const { userId } = new Required(req.body).getItems() as input;
-			const notification = await NotificationService.checkForNotifications(userId)
-			return HttpFactory.STATUS_200_OK(notification, res)
+			const { notification, hasNotification, message } = await NotificationService.checkForNotifications(userId)
+			return HttpFactory.STATUS_200_OK({ notification, hasNotification, message }, res)
 		} catch (e) {
 			const err = e as Err;
 			if (err.name === ErrorTypes.TYPE_ERROR) {

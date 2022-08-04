@@ -9,14 +9,14 @@ export class NotificationService {
 		try {
 			const currentNotification = await NotificationModel.findOne({ userId: userId });
 			if (currentNotification !== null) {
-				currentNotification.updateOne({
+				await currentNotification.updateOne({
 					$set: {
 						message: message,
 						notification: notification,
 						hasNotification: hasNotification
 					}
 				})
-				currentNotification.save()
+				await currentNotification.save()
 			} else {
 				await NotificationModel.create({
 					userId: userId,

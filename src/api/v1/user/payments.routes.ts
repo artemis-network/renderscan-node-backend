@@ -13,5 +13,7 @@ router.post(`${paymentsPrefix}/complete`, PaymentsController.completeOrder)
 router.post(`${paymentsPrefix}/rewards`, PaymentsController.rewardUser)
 router.post(`${paymentsPrefix}/rewards/init`, adminAuthenticatorMiddleWare, PaymentsController.initRewards)
 router.post(`${paymentsPrefix}/rewards/daily-bonous`, PaymentsController.dailyBounous)
+router.post(`${paymentsPrefix}/notifications`, PaymentsController.getNotificationsForUser)
+router.post(`${paymentsPrefix}/notifications/update`, PaymentsController.sendRewardNotification)
 
 export { router as paymentsRoutes }
