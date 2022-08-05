@@ -33,7 +33,7 @@ export class MarketplaceServices {
     static getTopTwentyCollectionNFTsFromSlug = async (slug: string) => {
         const myPuppeteerInstance = await puppeteer.launch({
             headless: true,
-            //executablePath: '/usr/bin/google-chrome',
+            executablePath: '/usr/bin/google-chrome',
             args: ["--no-sandbox"],
             'ignoreHTTPSErrors': true
         });
