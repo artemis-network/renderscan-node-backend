@@ -33,7 +33,7 @@ export class MarketplaceServices {
     static getTopTwentyCollectionNFTsFromSlug = async (slug: string) => {
         const myPuppeteerInstance = await puppeteer.launch({
             headless: true,
-            executablePath: '/usr/bin/google-chrome',
+            //executablePath: '/usr/bin/google-chrome',
             args: ["--no-sandbox"],
             'ignoreHTTPSErrors': true
         });
@@ -46,7 +46,6 @@ export class MarketplaceServices {
         }
         let resp = await OpenseaScraper.offers(slug, options);
         let nfts = JSON.parse(JSON.stringify(resp)).offers
-        console.log(nfts)
         const results = []
         for (let nft of nfts) {
             var json = {
@@ -91,7 +90,6 @@ export class MarketplaceServices {
                 console.log(error);
                 throw error
             });
-        await this.getTopTwentyCollectionNFTsFromSlug(slug)
         return result
     }
 
