@@ -18,7 +18,6 @@ import { PAYMENT, PAYMENT_TYPE, Transaction } from '../models/transaction.model'
 import { InAppWalletServices } from '../services/in_app_wallet.service';
 import { ImageServices } from '../../images/services/image.services';
 import { RazorPayServices } from '../services/razor_pay.service';
-import { HTTP_STATUS } from '../../http/http_status';
 
 export class UserController {
 
@@ -304,25 +303,52 @@ export class UserController {
 		}
 	};
 
-	// @desc validate user email by token 
+
+	// @desc change password form 
 	// @route /renderscan/v1/users/change-password/:token
 	// @param token : string
 	// @access public
 	static changePassword = async (req: Request, res: Response) => {
-		type inputOne = { token: string };
-		type inputTwo = { password: string };
 		try {
+			const { token } = req.params
+			const isValidToken = await UserServices.isValidToken(token);
+			if (isValidToken) {
+				return res.render("changePasswordForm.ejs", { warning: false, success: false, error: false })
+			}
+			return HttpFactory.STATUS_200_OK({ message: "Unauthorized access" }, res)
+		} catch (err) {
+			return HttpFactory.STATUS_500_INTERNAL_SERVER_ERROR(err, res)
+		}
+	}
+
+
+	// @desc change password form 
+	// @route /renderscan/v1/users/change-password/:token
+	// @param token : string
+	// @access public
+	static changePasswordPost = async (req: Request, res: Response) => {
+		type inputOne = { token: string };
+		type inputTwo = { password: string, confirmPassword: string };
+		try {
+
 			const { token } = new Required(req.params).getItems() as inputOne;
-			const { password } = new Required(req.body).getItems() as inputTwo;
+			const { password, confirmPassword } = new Required(req.body).getItems() as inputTwo;
+
+			const passw = /^(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{6,16}$/;
+
+			if (!password.trim().match(passw))
+				return res.render("changePasswordForm.ejs", { warning: true, success: false, error: false })
+			if (password.trim() !== confirmPassword.trim())
+				return res.render("changePasswordForm.ejs", { warning: true, success: false, error: false })
 			const isVerified = await UserServices.isValidToken(token)
 			if (isVerified) {
 				const hash = await UserServices.hashPassword(password)
 				await UserServices.setPassword(token, hash)
 				await UserServices.updateToken(token)
-				return HttpFactory.STATUS_200_OK({ isPasswordChanged: true }, res)
+				return res.render("changePasswordForm.ejs", { warning: false, success: true, error: false })
 			}
-			logger.info(`invalid token or user doesnot exits`);
-			return HttpFactory.STATUS_200_OK({ isPasswordChanged: false }, res);
+			logger.info(`invalid token or user does not exits`);
+			return res.render("changePasswordForm.ejs", { warning: false, success: false, error: true })
 		} catch (err) {
 			const error = err as Err;
 			if (error.name === ErrorTypes.REQUIRED_ERROR) {
@@ -439,6 +465,7 @@ export class UserController {
 	// @route /renderscan/v1/users/set-avatar
 	// @access public
 	static setAvatarUrl = async (req: Request, res: Response) => {
+		console.log(req.body);
 		if (!req.file)
 			return HttpFactory.STATUS_500_INTERNAL_SERVER_ERROR({ message: "empty file" }, res)
 		try {
@@ -456,7 +483,6 @@ export class UserController {
 				}
 				return HttpFactory.STATUS_200_OK({ isUploaded: true }, res)
 			})
-			// await UserServices.setAvtarUrl(userId, params.Key);
 		} catch (error) {
 			const err = error as Err;
 			if (err.name === ErrorTypes.REQUIRED_ERROR) {

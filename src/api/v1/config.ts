@@ -1,5 +1,6 @@
 const parentPrefix = "/renderscan/v1"
 
+const feedbackPrefix = parentPrefix + "/feedback"
 const userPrefix = parentPrefix + "/users"
 const walletPrefix = parentPrefix + "/wallets"
 const paymentsPrefix = parentPrefix + "/payments"
@@ -12,5 +13,6 @@ export {
 	paymentsPrefix,
 	parentPrefix,
 	imagePrefix,
-	marketplacePrefix
+	marketplacePrefix,
+	feedbackPrefix
 }

@@ -10,6 +10,7 @@ import { Reward, RewardInterface, RewardDoc, RewardModel } from './user/models/r
 import { Referal, ReferalInterface, ReferalDoc, ReferalModel } from './user/models/referal.model'
 import { BlockChainWallet, BlockChainWalletInterface, BlockChainWalletDoc, BlockChainWalletModel } from './user/models/block_chain_wallet'
 import { Notification, NotificationInterface, NotificationDoc, NotificationModel } from './user/models/notifiactions'
+import { FeedBack, FeedBackDoc, FeedBackInterface, FeedBackModel } from './feedback/feedback.model'
 
 
 import { MONGO_DB_URL } from '../../config'
@@ -27,29 +28,26 @@ mongoose.connection
 export const db = {
 	mongoose,
 	// Modals
-	UserModel, InAppWalletModel, RazorPayModel, TranscationModel, ReferalModel, RewardModel, BlockChainWalletModel, NotificationModel
+	UserModel, InAppWalletModel, RazorPayModel, TranscationModel, ReferalModel,
+	RewardModel, BlockChainWalletModel, NotificationModel, FeedBackModel
 }
 
 export const RUBY_VALUE_PER_ONE_INR = 100;
 
 export const classes = {
-	User,
-	RazorPay,
-	Transaction,
-	InAppWallet,
-	Reward,
-	Referal,
-	BlockChainWallet,
-	Notification,
+	User, RazorPay, Transaction, InAppWallet, Reward, Referal, BlockChainWallet,
+	Notification, FeedBack
 }
 
 export {
 	// Types
 	UserInterface, InAppWalletInterface, RazorPayInterface, TransactionInterface,
-	ReferalInterface, RewardInterface, BlockChainWalletInterface, NotificationInterface
+	ReferalInterface, RewardInterface, BlockChainWalletInterface, NotificationInterface,
+	FeedBackInterface
 }
 
 export {
 	// Docs
-	UserDoc, InAppWalletDoc, RazorPayDoc, TransactionDoc, RewardDoc, ReferalDoc, BlockChainWalletDoc, NotificationDoc
+	UserDoc, InAppWalletDoc, RazorPayDoc, TransactionDoc, RewardDoc, ReferalDoc,
+	BlockChainWalletDoc, NotificationDoc, FeedBackDoc
 }

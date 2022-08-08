@@ -11,7 +11,7 @@ import { InAppWalletController } from './controllers/in_app_wallet.controller'
 
 import { userPrefix } from '../config'
 
-const upload = multer({dest: 'uploads/'});
+const upload = multer({ dest: 'uploads/' });
 
 router.post(`${userPrefix}/init`, UserController.initialize);
 router.post(`${userPrefix}/login`, UserController.loginUser);
@@ -22,7 +22,9 @@ router.post(`${userPrefix}/google-mobile-login`, UserController.createMobileGoog
 router.get(`${userPrefix}/validate/:token`, UserController.validateEmail)
 
 router.post(`${userPrefix}/forgot-password/request`, UserController.forgotPasswordSendRequest)
-router.post(`${userPrefix}/change-password/:token`, UserController.changePassword)
+router.get(`${userPrefix}/change-password/:token`, UserController.changePassword)
+router.post(`${userPrefix}/change-password/:token`, UserController.changePasswordPost)
+
 
 router.get(`${userPrefix}/test-token`, authorizeUserMiddleWare, (req, res) => res.send("hello"));
 

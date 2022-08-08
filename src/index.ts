@@ -14,6 +14,7 @@ import { marketplaceRoutes } from './api/v1/marketplace/marketplace.routes'
 
 import bodyParser from 'body-parser';
 import { MarketplaceServices } from './api/v1/marketplace/services/marketplace.services';
+import { feedbackRoutes } from './api/v1/feedback/feeback.route';
 
 const app = express();
 
@@ -26,6 +27,7 @@ app.use(json());
 app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use("/static", express.static("static"))
 
 app.get('/', (req, res) => res.send("🚀  WELCOME TO RENDERVERSE"))
 
@@ -41,5 +43,6 @@ app.use(userRoutes);
 app.use(imageRoutes);
 app.use(paymentsRoutes);
 app.use(marketplaceRoutes);
+app.use(feedbackRoutes)
 
 app.listen(PORT, async () => await init());
