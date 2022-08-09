@@ -1,10 +1,13 @@
 import axios, { AxiosRequestConfig } from 'axios'
-import puppeteer from 'puppeteer'
 import { USER_AGENT, LOCAL_DATA_FOLDER_PATH, LOCAL_SLUGS_FOLDER_PATH, BLOCKDAEMON_API_KEY, NFTPORT_API_KEY } from '../../../../config'
 import fs from 'fs'
 import path from 'path'
 import OpenseaScraper from 'opensea-scraper'
 import shuffleArray from 'shuffle-array'
+import puppeteer from 'puppeteer-extra';
+import StealthPlugin from 'puppeteer-extra-plugin-stealth';
+puppeteer.use(StealthPlugin());
+
 export class MarketplaceServices {
 
     static getCollectionInfoFromSlugService = async (slug: string) => {
@@ -28,16 +31,21 @@ export class MarketplaceServices {
     }
 
     static getTopTwentyCollectionNFTsFromSlug = async (slug: string) => {
+        const myPuppeteerInstance = await puppeteer.launch({
+            headless: true,
+            executablePath: '/usr/bin/google-chrome',
+            args: ["--no-sandbox"],
+            'ignoreHTTPSErrors': true
+        });
         const options = {
             debug: false,
             logs: false,
             sort: true,
             additionalWait: 0,
-            browserInstance: undefined,
+            browserInstance: myPuppeteerInstance,
         }
         let resp = await OpenseaScraper.offers(slug, options);
         let nfts = JSON.parse(JSON.stringify(resp)).offers
-        console.log(nfts)
         const results = []
         for (let nft of nfts) {
             var json = {
@@ -82,7 +90,6 @@ export class MarketplaceServices {
                 console.log(error);
                 throw error
             });
-        await this.getTopTwentyCollectionNFTsFromSlug(slug)
         return result
     }
 
