@@ -11,7 +11,7 @@ def getCompositeImage(inputFile, maskFile, outputFile):
             (iwidth, iheight), resample=Image.Resampling.BICUBIC, reducing_gap=2.0
         )
         img = Image.composite(ref, empty, mask)
-        img_scaled = img.resize((img.size[0] * 1, img.size[1] * 1))
+        img_scaled = img.resize((img.size[0] * 3, img.size[1] * 3))
         img_scaled = img_scaled.rotate(270)
         img_scaled.save(outputFile)
         return True
