@@ -39,13 +39,15 @@ const offersByUrl = async (url, optionsGiven = {}) => {
   if (prod) {
     browser = await puppeteer.launch({
       headless: !debug, // when debug is true => headless should be false
-      args: ["--start-maximized"],
+      args: ["--start-maximized","--no-sandbox"],
       executablePath: "/usr/bin/google-chrome",
+      'ignoreHTTPSErrors': true
     });
   } else {
     browser = await puppeteer.launch({
       headless: !debug, // when debug is true => headless should be false
-      args: ["--start-maximized"],
+      args: ["--start-maximized","--no-sandbox"],
+      'ignoreHTTPSErrors': true
     });
   }
   warnIfNotUsingStealth(browser);
