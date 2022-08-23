@@ -80,7 +80,6 @@ const offersByScrollingByUrl = async (
   }
 
   while (offersFromGraphql.length <= 0) {
-    console.log("finding offers...");
     page.on("response", async (response) => {
       if (response.url().includes("graphql")) {
         responses.push(response);
@@ -90,7 +89,6 @@ const offersByScrollingByUrl = async (
         );
         offersFromGraphql = offersFromGraphql.concat(offersBatch);
       }
-      console.log("found offers..." + offersFromGraphql.length);
     });
     let bottomReached = await bottomOfPageReached(page);
     if (!bottomReached) {
