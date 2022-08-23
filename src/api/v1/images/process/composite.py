@@ -8,7 +8,7 @@ def getCompositeImage(inputFile, maskFile, outputFile):
         iwidth, iheight = ref.size
         empty = Image.new("RGBA", ref.size, 0)
         mask = Image.open(maskFile).convert("L").resize(
-            (iwidth, iheight), resample=Image.Resampling.BICUBIC, reducing_gap=2.0
+            (iwidth, iheight), resample=Image.BICUBIC, reducing_gap=2.0
         )
         img = Image.composite(ref, empty, mask)
         img_scaled = img.resize((img.size[0] * 3, img.size[1] * 3))

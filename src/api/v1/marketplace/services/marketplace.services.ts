@@ -54,38 +54,39 @@ export class MarketplaceServices {
         return resp;
     }
 
-    // static getCollectionNFTsFromSlugService = async (slug: string, limit: number) => {
-    //     let corsURL = "https://cors.renderverse.workers.dev/?u="
-    //     let url = encodeURIComponent("https://api.opensea.io/api/v1/assets?collection_slug=" + slug + "&limit=" + limit + "&order_direction=asc")
-    //     var config = {
-    //         method: 'get',
-    //         url: corsURL + url,
-    //         headers: {
-    //             'User-Agent': USER_AGENT
-    //         }
-    //     };
+    static getCollectionNFTsFromSlugService = async (slug: string, limit: number) => {
+        let corsURL = "https://cors.renderverse.workers.dev/?u="
+        let url = encodeURIComponent("https://api.opensea.io/api/v1/assets?collection_slug=" + slug + "&limit=" + limit + "&order_direction=asc")
+        var config = {
+            method: 'get',
+            url: corsURL + url,
+            headers: {
+                'User-Agent': USER_AGENT
+            }
+        };
 
-    //     const result = await axios(config)
-    //         .then(function (response) {
-    //             const results: any = []
-    //             const data = JSON.parse(JSON.stringify(response.data)).assets;
-    //             for (let item of data) {
-    //                 var json = {
-    //                     name: item.name?.toString() || slug + " #" + item.token_id,
-    //                     imageUrl: item.image_url?.toString(),
-    //                     contract: item.asset_contract.address?.toString(),
-    //                     tokenId: item.token_id?.toString()
-    //                 }
-    //                 results.push(json)
-    //             }
-    //             return results;
-    //         })
-    //         .catch(function (error) {
-    //             console.log(error);
-    //             throw error
-    //         });
-    //     return result
-    // }
+        const result = await axios(config)
+            .then(function (response) {
+                const results: any = []
+                const data = JSON.parse(JSON.stringify(response.data)).assets;
+                for (let item of data) {
+                    var json = {
+                        name: item.name?.toString() || slug + " #" + item.token_id,
+                        imageUrl: item.image_url?.toString(),
+                        lastPrice: ((item.last_sale?.total_price ?? 0) / 10 ** 18)?.toString(),
+                        contract: item.asset_contract.address?.toString(),
+                        tokenId: item.token_id?.toString()
+                    }
+                    results.push(json)
+                }
+                return results;
+            })
+            .catch(function (error) {
+                console.log(error);
+                throw error
+            });
+        return result
+    }
 
     static getCollectionNFTsFromSymbolService = async (symbol: string, limit: number) => {
         let corsURL = "https://cors.renderverse.workers.dev/?u="
@@ -308,7 +309,7 @@ export class MarketplaceServices {
             const results: any = []
             while (i < limit) {
                 var slug = slugs[j];
-                const nfts = (await this.getTopTwentyCollectionNFTsFromSlug(slug.trim())).slice(3)
+                const nfts = await this.getCollectionNFTsFromSlugService(slug.trim(), 3)
                 for (let nft of nfts) {
                     results.push(nft)
                     i += 1;
