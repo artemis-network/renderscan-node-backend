@@ -5,7 +5,7 @@ export class OpenseaScraperServices {
   static scrapeTopTwentyOffers = async (slug) => {
     const options = {
       debug: false,
-      prod: false,
+      prod: true,
     };
     const result = await getOffers(slug, options);
     //console.log(`total Offers: ${result.stats.totalOffers}`);
@@ -16,7 +16,7 @@ export class OpenseaScraperServices {
   static scrapeNextOffers = async (slug, offset) => {
     const options = {
       debug: false,
-      prod: false,
+      prod: true,
       offset: offset,
     };
     const result = await getOffersByScrolling(slug, options);
