@@ -2,7 +2,7 @@ FROM nikolaik/python-nodejs:latest
 
 ENV NODE_OPTIONS=--max_old_space_size=1024
 
-RUN pip install PILLOW
+RUN pip install Pillow==9.0.0
 
 WORKDIR /app
 

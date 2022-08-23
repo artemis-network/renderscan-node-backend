@@ -193,6 +193,7 @@ export class ImageServices {
                 console.log(' > compositing final image...')
                 try {
                     const pythonResp = await this.spawnPythonProcess(cutReceivedFilePath, cutMaskFilePath, currentCutFilePath)
+                    console.log(pythonResp)
                     if (pythonResp.trim() == "True") {
                         console.log(' > cut finished...')
                         const currentCutImg = await Jimp.read(currentCutFilePath)

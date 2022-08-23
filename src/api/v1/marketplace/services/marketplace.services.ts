@@ -2,7 +2,7 @@ import axios, { AxiosRequestConfig } from 'axios'
 import { USER_AGENT, LOCAL_DATA_FOLDER_PATH, LOCAL_SLUGS_FOLDER_PATH, BLOCKDAEMON_API_KEY, NFTPORT_API_KEY } from '../../../../config'
 import fs from 'fs'
 import path from 'path'
-import {OpenseaScraperServices} from '../services/OpenseaScraper.services.js'
+import { OpenseaScraperServices } from '../services/OpenseaScraper.services.js'
 import shuffleArray from 'shuffle-array'
 
 export class MarketplaceServices {
@@ -70,14 +70,17 @@ export class MarketplaceServices {
                 const results: any = []
                 const data = JSON.parse(JSON.stringify(response.data)).assets;
                 for (let item of data) {
-                    var json = {
-                        name: item.name?.toString() || slug + " #" + item.token_id,
-                        imageUrl: item.image_url?.toString(),
-                        lastPrice: ((item.last_sale?.total_price ?? 0) / 10 ** 18)?.toString(),
-                        contract: item.asset_contract.address?.toString(),
-                        tokenId: item.token_id?.toString()
+                    let lastPrice = ((item.last_sale?.total_price ?? 0) / 10 ** 18)?.toString()
+                    if (lastPrice != "0") {
+                        var json = {
+                            name: item.name?.toString() || slug + " #" + item.token_id,
+                            imageUrl: item.image_url?.toString(),
+                            lastPrice: ((item.last_sale?.total_price ?? 0) / 10 ** 18)?.toString(),
+                            contract: item.asset_contract.address?.toString(),
+                            tokenId: item.token_id?.toString()
+                        }
+                        results.push(json)
                     }
-                    results.push(json)
                 }
                 return results;
             })
@@ -309,7 +312,7 @@ export class MarketplaceServices {
             const results: any = []
             while (i < limit) {
                 var slug = slugs[j];
-                const nfts = await this.getCollectionNFTsFromSlugService(slug.trim(), 3)
+                const nfts = (await this.getCollectionNFTsFromSlugService(slug.trim(), 10)).slice(3)
                 for (let nft of nfts) {
                     results.push(nft)
                     i += 1;
