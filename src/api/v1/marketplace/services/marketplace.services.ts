@@ -2,70 +2,16 @@ import axios, { AxiosRequestConfig } from 'axios'
 import { USER_AGENT, LOCAL_DATA_FOLDER_PATH, LOCAL_SLUGS_FOLDER_PATH, BLOCKDAEMON_API_KEY, NFTPORT_API_KEY } from '../../../../config'
 import fs from 'fs'
 import path from 'path'
-import OpenseaScraper from 'opensea-scraper'
+import {OpenseaScraperServices} from '../services/OpenseaScraper.services.js'
 import shuffleArray from 'shuffle-array'
-import puppeteer from 'puppeteer-extra';
-import StealthPlugin from 'puppeteer-extra-plugin-stealth';
-puppeteer.use(StealthPlugin());
 
 export class MarketplaceServices {
 
     static getCollectionInfoFromSlugService = async (slug: string) => {
-        const basicInfo = await OpenseaScraper.basicInfo(slug);
-        const json = {
-            name: basicInfo.name?.toString(),
-            symbol: basicInfo.symbol.toString(),
-            description: basicInfo.description?.toString(),
-            imageUrl: basicInfo.imageUrl?.toString(),
-            bannerUrl: basicInfo.bannerImageUrl?.toString(),
-            contractAddress: basicInfo.contractAddress?.toString(),
-            totalSupply: basicInfo.stats?.totalSupply?.toString(),
-            owners: basicInfo.stats?.numOwners?.toString(),
-            floorPrice: basicInfo.stats?.floorPrice?.toString(),
-            oneDayChange: basicInfo.stats?.oneDayChange?.toString(),
-            totalVolume: basicInfo.stats?.totalVolume?.toString(),
-            twitter: basicInfo.twitter?.toString(),
-            externalUrl: basicInfo.website?.toString()
-        }
-        return json
-    }
-
-    static getTopTwentyCollectionNFTsFromSlug = async (slug: string) => {
-        const myPuppeteerInstance = await puppeteer.launch({
-            headless: true,
-            executablePath: '/usr/bin/google-chrome',
-            args: ["--no-sandbox"],
-            'ignoreHTTPSErrors': true
-        });
-        const options = {
-            debug: false,
-            logs: false,
-            sort: true,
-            additionalWait: 0,
-            browserInstance: myPuppeteerInstance,
-        }
-        let resp = await OpenseaScraper.offers(slug, options);
-        let nfts = JSON.parse(JSON.stringify(resp)).offers
-        const results = []
-        for (let nft of nfts) {
-            var json = {
-                name: nft.name?.toString() || slug + " #" + nft.tokenId,
-                imageUrl: nft.displayImageUrl?.toString(),
-                contract: nft.assetContract?.toString(),
-                tokenId: nft.tokenId?.toString()
-            }
-            results.push(json)
-        }
-
-        return results;
-    }
-
-    static getCollectionNFTsFromSlugService = async (slug: string, limit: number) => {
-        let corsURL = "https://cors.renderverse.workers.dev/?u="
-        let url = encodeURIComponent("https://api.opensea.io/api/v1/assets?collection_slug=" + slug + "&limit=" + limit + "&order_direction=asc")
+        let url = "https://api.opensea.io/api/v1/collection/" + slug
         var config = {
             method: 'get',
-            url: corsURL + url,
+            url: url,
             headers: {
                 'User-Agent': USER_AGENT
             }
@@ -73,25 +19,73 @@ export class MarketplaceServices {
 
         const result = await axios(config)
             .then(function (response) {
-                const results: any = []
-                const data = JSON.parse(JSON.stringify(response.data)).assets;
-                for (let item of data) {
-                    var json = {
-                        name: item.name?.toString() || slug + " #" + item.token_id,
-                        imageUrl: item.image_url?.toString(),
-                        contract: item.asset_contract.address?.toString(),
-                        tokenId: item.token_id?.toString()
-                    }
-                    results.push(json)
+                const data = JSON.parse(JSON.stringify(response.data));
+                const json = {
+                    name: data.collection.name?.toString(),
+                    description: data.collection.description?.toString(),
+                    imageUrl: data.collection.image_url?.toString(),
+                    bannerUrl: data.collection.banner_image_url?.toString(),
+                    contractAddress: data.collection.primary_asset_contracts[0]?.address?.toString(),
+                    totalSupply: data.collection.stats?.total_supply?.toString(),
+                    owners: data.collection.stats?.num_owners?.toString(),
+                    floorPrice: data.collection.stats?.floor_price?.toString(),
+                    oneDayChange: data.collection.stats?.one_day_change?.toString(),
+                    totalVolume: data.collection.stats?.total_volume?.toString(),
+                    twitter: data.collection.twitter_username?.toString(),
+                    externalUrl: data.collection.external_url?.toString()
                 }
-                return results;
+                return json
             })
             .catch(function (error) {
                 console.log(error);
                 throw error
             });
+
         return result
     }
+
+    static getTopTwentyCollectionNFTsFromSlug = async (slug: string) => {
+        let resp = await OpenseaScraperServices.scrapeTopTwentyOffers(slug);
+        return resp;
+    }
+
+    static getNextCollectionNFTsFromSlug = async (slug: string, offset: number) => {
+        let resp = await OpenseaScraperServices.scrapeNextOffers(slug, offset);
+        return resp;
+    }
+
+    // static getCollectionNFTsFromSlugService = async (slug: string, limit: number) => {
+    //     let corsURL = "https://cors.renderverse.workers.dev/?u="
+    //     let url = encodeURIComponent("https://api.opensea.io/api/v1/assets?collection_slug=" + slug + "&limit=" + limit + "&order_direction=asc")
+    //     var config = {
+    //         method: 'get',
+    //         url: corsURL + url,
+    //         headers: {
+    //             'User-Agent': USER_AGENT
+    //         }
+    //     };
+
+    //     const result = await axios(config)
+    //         .then(function (response) {
+    //             const results: any = []
+    //             const data = JSON.parse(JSON.stringify(response.data)).assets;
+    //             for (let item of data) {
+    //                 var json = {
+    //                     name: item.name?.toString() || slug + " #" + item.token_id,
+    //                     imageUrl: item.image_url?.toString(),
+    //                     contract: item.asset_contract.address?.toString(),
+    //                     tokenId: item.token_id?.toString()
+    //                 }
+    //                 results.push(json)
+    //             }
+    //             return results;
+    //         })
+    //         .catch(function (error) {
+    //             console.log(error);
+    //             throw error
+    //         });
+    //     return result
+    // }
 
     static getCollectionNFTsFromSymbolService = async (symbol: string, limit: number) => {
         let corsURL = "https://cors.renderverse.workers.dev/?u="
@@ -141,7 +135,7 @@ export class MarketplaceServices {
         }
     }
 
-    static getNFTlatestPriceService = async (contract: string, token_id: string) => {
+    static getNFTListingsService = async (contract: string, token_id: string) => {
         let corsURL = "https://cors.renderverse.workers.dev/?u="
         let url = encodeURIComponent("https://api.opensea.io/api/v1/asset/" + contract + "/" + token_id + "/listings")
         var config = {
@@ -314,7 +308,7 @@ export class MarketplaceServices {
             const results: any = []
             while (i < limit) {
                 var slug = slugs[j];
-                const nfts = await this.getCollectionNFTsFromSlugService(slug.trim(), 3)
+                const nfts = (await this.getTopTwentyCollectionNFTsFromSlug(slug.trim())).slice(3)
                 for (let nft of nfts) {
                     results.push(nft)
                     i += 1;
@@ -472,9 +466,6 @@ export class MarketplaceServices {
                 console.log(error);
             });
         return result
-    }
-
-    static getNFTListingsService = async (contract: string, token_id: string) => {
     }
 
     static getNFTOffersService = async (contract: string, token_id: string) => {

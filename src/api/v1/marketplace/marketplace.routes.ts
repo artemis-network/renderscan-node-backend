@@ -18,7 +18,6 @@ router.post(`${marketplacePrefix}/gettrendingcollections`, MarketplaceController
 router.post(`${marketplacePrefix}/updatetrendingcollections`, upload.single('data'), MarketplaceController.updateTrendingCollections);
 router.post(`${marketplacePrefix}/getcollectioninfo`, MarketplaceController.getCollectionInfo);
 router.post(`${marketplacePrefix}/getcollectionnfts`, MarketplaceController.getCollectionNFTs);
-router.post(`${marketplacePrefix}/getNFTLatestPrice`, MarketplaceController.getNFTLatestPrice);
 router.post(`${marketplacePrefix}/getNFTListings`, MarketplaceController.getNFTListings);
 router.post(`${marketplacePrefix}/getNFTOffers`, MarketplaceController.getNFTOffers);
 router.post(`${marketplacePrefix}/getnftinfo`, MarketplaceController.getNFTInfo);

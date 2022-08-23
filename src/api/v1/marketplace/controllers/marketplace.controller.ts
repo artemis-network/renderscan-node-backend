@@ -75,8 +75,8 @@ export class MarketplaceController {
             if (offset == 0) {
                 nfts = await MarketplaceServices.getTopTwentyCollectionNFTsFromSlug(slug)
             }
-            else if (offset == 1) {
-                nfts = await MarketplaceServices.getCollectionNFTsFromSlugService(slug, 50)
+            else if (offset > 0) {
+                nfts = await MarketplaceServices.getNextCollectionNFTsFromSlug(slug, offset)
             }
 
             if (nfts != null) {
@@ -89,6 +89,7 @@ export class MarketplaceController {
             }
 
         } catch (e) {
+            console.log(e)
             return HttpFactory.STATUS_500_INTERNAL_SERVER_ERROR({ message: e }, res)
         }
     }
@@ -119,25 +120,6 @@ export class MarketplaceController {
             if (listings != null) {
                 console.log("Received offers of NFT")
                 return HttpFactory.STATUS_200_OK({ Listings: listings }, res)
-
-            }
-            else {
-                return HttpFactory.STATUS_200_OK({ Info: "Response is empty from service" }, res)
-            }
-
-        } catch (e) {
-            return HttpFactory.STATUS_500_INTERNAL_SERVER_ERROR({ message: e }, res)
-        }
-    }
-
-    static getNFTLatestPrice = async (req: Request, res: Response) => {
-        const { contract, tokenId } = req.body
-        try {
-
-            const price = await MarketplaceServices.getNFTlatestPriceService(contract, tokenId)
-            if (price != null) {
-                console.log("Received price of NFT")
-                return HttpFactory.STATUS_200_OK({ price: price }, res)
 
             }
             else {
