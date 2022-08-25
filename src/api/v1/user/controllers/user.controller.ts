@@ -366,6 +366,8 @@ export class UserController {
 	// @access public
 	static createGoogleUser = async (req: Request, res: Response) => {
 		type input = { token: string };
+
+		console.log("hello  f")
 		try {
 			const { token } = new Required(req.body).getItems() as input;
 			const { username, email, emailVerified } = await UserServices.verifyGoogleTokenAndFetchCredentials(token)
@@ -421,43 +423,52 @@ export class UserController {
 	// @access public
 	static createMobileGoogleUser = async (req: Request, res: Response) => {
 		type input = { email: string };
+		console.log(req.body);
 		try {
 			const { email } = new Required(req.body).addKey("email").getItems() as input;
 			const username = email.split("@")[0]
 			try {
-				const newUser = await UserServices.createUser(username, username, email, "", "", true)
-				UserServices.createWalletForUser(newUser._id)
-				const token: string = JWT.generateJWTToken(newUser._id);
-				const response = {
-					error: false, userId: newUser._id, message: "SUCCESS",
-					username: newUser.username, errorType: "NONE", email: newUser.email,
-					accessToken: token, publicToken: "[ADMIN]", status: 200
-				};
-				return HttpFactory.STATUS_200_OK(response, res);
+				const isExists = await UserServices.isUserAlreadyExists(username, email)
+				if (isExists) {
+					const user = await UserServices.getUserByEmail(email)
+					if (user?.isGoogleAccount === false) {
+						const response = {
+							error: true,
+							message: "It's not a google account, SignIn with Email & Password",
+							errorType: "UNAUTHORIZED_ACCESS"
+						}
+						return HttpFactory.STATUS_200_OK(response, res)
+					}
+					const token: string = JWT.generateJWTToken(user?._id);
+					const response = { error: false, errorType: "NONE", username: username, accessToken: token, userId: user._id, email: email, message: "SUCCESS" };
+					return HttpFactory.STATUS_200_OK(response, res)
+				}
+				const { _id }: any = await UserServices.createUser(username, username, email, "", "", true)
+				UserServices.createWalletForUser(_id)
+				const token: string = JWT.generateJWTToken(_id);
+				const response = { error: false, errorType: "NONE", username: username, accessToken: token, userId: _id, email: email, message: "SUCCESS" };
+				return HttpFactory.STATUS_200_OK(response, res)
 			} catch (err) {
 				const error = err as Err;
-				if (error.name === ErrorTypes.TYPE_ERROR) {
-					const user = await UserServices.getUserByEmail(email);
-					const token: string = JWT.generateJWTToken(user?._id);
-					const response = {
-						error: false, userId: user?._id, message: "SUCCESS",
-						username: username, email: email, accessToken: token,
-						publicToken: "[ADMIN]", status: 200, errorType: "NONE"
-					}
-					return HttpFactory.STATUS_200_OK(response, res);
+				if (error.name === ErrorTypes.OBJECT_NOT_FOUND_ERROR || error.name === ErrorTypes.OBJECT_UN_DEFINED_ERROR) {
+					logger.error(`user does not exists ${err}`)
+					return HttpFactory.STATUS_404_NOT_FOUND(err, res)
 				}
+				if (error.name === ErrorTypes.TYPE_ERROR) {
+					logger.error(`bad request ${err}`)
+					return HttpFactory.STATUS_400_BAD_REQUEST(err, res)
+				}
+				logger.error(`something went wrong ${err}`)
+				return HttpFactory.STATUS_500_INTERNAL_SERVER_ERROR(err, res)
 			}
 		} catch (err) {
 			const error = err as Err;
 			if (error.name === ErrorTypes.REQUIRED_ERROR) {
-				logger.error(`bad request : ${error}`)
-				return HttpFactory.STATUS_400_BAD_REQUEST(error, res);
+				logger.error(`bad request, ${error}`)
+				return HttpFactory.STATUS_400_BAD_REQUEST(err, res);
 			}
-			const e = {
-				error: true, userId: "", message: "FAILED", username: "", email: "",
-				accessToken: "", publicToken: "[GUEST]", status: 200, errorType: "FAILED"
-			}
-			return HttpFactory.STATUS_200_OK(e, res);
+			logger.error(`something went wrong, ${error}`)
+			return HttpFactory.STATUS_500_INTERNAL_SERVER_ERROR(err, res);
 		}
 	}
 
