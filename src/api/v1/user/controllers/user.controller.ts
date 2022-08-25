@@ -423,7 +423,6 @@ export class UserController {
 	// @access public
 	static createMobileGoogleUser = async (req: Request, res: Response) => {
 		type input = { email: string };
-		console.log(req.body);
 		try {
 			const { email } = new Required(req.body).addKey("email").getItems() as input;
 			const username = email.split("@")[0]
@@ -443,7 +442,8 @@ export class UserController {
 					const response = { error: false, errorType: "NONE", username: username, accessToken: token, userId: user._id, email: email, message: "SUCCESS" };
 					return HttpFactory.STATUS_200_OK(response, res)
 				}
-				const { _id }: any = await UserServices.createUser(username, username, email, "", "", true)
+				const stdToken = UserServices.createToken();
+				const { _id }: any = await UserServices.createUser(username, username, email, "", stdToken, true)
 				UserServices.createWalletForUser(_id)
 				const token: string = JWT.generateJWTToken(_id);
 				const response = { error: false, errorType: "NONE", username: username, accessToken: token, userId: _id, email: email, message: "SUCCESS" };

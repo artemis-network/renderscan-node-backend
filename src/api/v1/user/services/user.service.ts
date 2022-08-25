@@ -203,6 +203,7 @@ export class UserServices {
 				userType: Role.USER.toString()
 			});
 		} catch (error) {
+			console.log(error)
 			throw ErrorFactory.TYPE_ERROR(`Invalid types`)
 		}
 	}
