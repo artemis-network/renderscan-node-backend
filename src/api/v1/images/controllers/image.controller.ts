@@ -2,29 +2,21 @@ import { Request, Response } from 'express';
 import { ConnectionStates } from 'mongoose';
 import { HttpFactory } from '../../http/http_factory';
 import { UserServices } from '../../user/services/user.service';
-import { ImageType, NFT } from '../model/nft_model';
+import { ImageType, NFT, NFTModel } from '../model/nft_model';
 import { ImageServices } from '../services/image.services'
 
 export class ImageController {
 
 	static getGalleryImages = async (req: Request, res: Response) => {
 		try {
-			const { username } = req.body
-			const s3 = ImageServices.getAWSS3Object();
-			const params = ImageServices.getS3ParamsToDowload(username)
-
-			s3.listObjectsV2(params, function (err, data) {
-				const files: any = []
-				if (err) console.log(err, err.stack); // an error occurred
-				else {
-					data.Contents?.forEach(function (obj) {
-						console.log(obj.Key)
-						files.push(ImageServices.constructUrl(obj.Key))
-					})
-				}
-				return HttpFactory.STATUS_200_OK({ images: files }, res)
-			});
-
+			const { userId, type } = req.body
+			console.log(req.body)
+			let imageType;
+			if (type == "SCANNED") imageType = ImageType.SCANNED;
+			if (type == "IMPORTED") imageType = ImageType.IMPORTED;
+			if (type == "GENERATED") imageType = ImageType.GENERATED;
+			const nfts = await NFTModel.find({ user: userId }).where({ type: imageType }).exec()
+			return HttpFactory.STATUS_200_OK({ nfts: nfts }, res)
 		} catch (e) {
 			return HttpFactory.STATUS_500_INTERNAL_SERVER_ERROR({ message: e }, res)
 		}
