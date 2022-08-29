@@ -132,6 +132,18 @@ export class ImageServices {
         return data;
     }
 
+    static addBackgroundToImageService = async (inputFilePath: any, background: string) => {
+        return await Jimp.read(inputFilePath).then(function (image) {
+            var width = image.bitmap.width;
+            var height = image.bitmap.height;
+            var backgroundColor = background;
+            var backgroundImage = new Jimp(width, height, backgroundColor)
+            return backgroundImage.blit(image, 0, 0)
+                .getBase64Async(backgroundImage.getMIME())
+
+        });
+    }
+
     static cutImageService = async (username: string, inputFilePath: any) => {
         if (!fs.existsSync(IMAGE_CREDS.localImageFolderPath)) {
             fs.mkdirSync(IMAGE_CREDS.localImageFolderPath);
