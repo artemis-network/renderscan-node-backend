@@ -80,6 +80,21 @@ export class ImageController {
 		}
 	}
 
+	static addBackground = async (req: Request, res: Response) => {
+		if (!req.file)
+			return HttpFactory.STATUS_500_INTERNAL_SERVER_ERROR({ message: "empty image" }, res)
+
+		const { username, background } = req.body
+		console.log("username - " + username)
+		const filePath = req.file.path
+		try {
+			const outputBuffer: any = await ImageServices.addBackgroundToImageService(filePath, background)
+			return HttpFactory.STATUS_200_OK({ Image: outputBuffer }, res)
+		} catch (e) {
+			return HttpFactory.STATUS_500_INTERNAL_SERVER_ERROR({ message: e }, res)
+		}
+	}
+
 	static saveGenerateImage = async (req: Request, res: Response) => {
 		try {
 			if (!req.file)
