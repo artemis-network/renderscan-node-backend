@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import { ConnectionStates } from 'mongoose';
 import { HttpFactory } from '../../http/http_factory';
+import { UserServices } from '../../user/services/user.service';
+import { ImageType, NFT } from '../model/nft_model';
 import { ImageServices } from '../services/image.services'
 
 export class ImageController {
@@ -39,16 +41,26 @@ export class ImageController {
 		}
 	}
 
+
 	static saveImages = async (req: Request, res: Response) => {
 		try {
 			const { filename, username } = req.body
 			const s3 = ImageServices.getAWSS3Object();
 			const params = ImageServices.getS3ParamsToUpload(filename, username)
-
-			s3.upload(params, function (err: any, data: any) {
+			const _id = await UserServices.getUserByUsername(username);
+			s3.upload(params, async function (err: any, data: any) {
 				if (err)
 					console.log(err, err.stack); // an error occurred
 				else {
+					const nft = new NFT({
+					})
+						.setS3Url(data.Location)
+						.setType(ImageType.SCANNED)
+						.setUser(_id)
+						.setName(filename)
+						.setFilename(filename).get();
+
+					await ImageServices.createNFT(nft)
 					ImageServices.deleteUserFiles(filename, username)
 				}
 				return HttpFactory.STATUS_200_OK({ isUploaded: true }, res)
@@ -71,6 +83,7 @@ export class ImageController {
 			const { currentCutFileName, respImg }: any = await ImageServices.cutImageService(username, filePath)
 			return HttpFactory.STATUS_200_OK({ filename: currentCutFileName, file: respImg }, res)
 		} catch (e) {
+			console.log(e);
 			return HttpFactory.STATUS_500_INTERNAL_SERVER_ERROR({ message: e }, res)
 		}
 	}
@@ -87,13 +100,24 @@ export class ImageController {
 			console.log(req.body, filePath)
 
 			const s3 = ImageServices.getAWSS3Object();
+
 			const params = ImageServices.getGenerateImageS3ParamsToUpload(resp?.cutReceivedFilePath ?? "", resp?.cutReceivedFileName ?? "", username)
-			s3.upload(params, function (err: any, data: any) {
+			const _id = await UserServices.getUserByUsername(username);
+			s3.upload(params, async function (err: any, data: any) {
 				if (err) {
 					console.log(err); // an error occurred
 				}
 				else {
 					// ImageServices.deleteUserFiles(filename, username)
+					const nft = new NFT({
+					})
+						.setS3Url(data.Location)
+						.setType(ImageType.GENERATED)
+						.setUser(_id)
+						.setName(req.file?.filename)
+						.setFilename(req.file?.filename).get();
+
+					await ImageServices.createNFT(nft)
 				}
 				return HttpFactory.STATUS_200_OK({ isUploaded: true }, res)
 			})

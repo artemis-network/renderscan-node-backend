@@ -6,7 +6,10 @@ import axios, { AxiosRequestConfig } from 'axios'
 import FormData from 'form-data'
 import Jimp from 'jimp'
 import { spawn } from 'child_process'
-import { Blob } from "buffer";
+import { NFTDoc, NFTInterface, classes, db } from '../../db'
+
+const { NFTModel } = db
+const { NFT } = classes
 
 export class ImageServices {
 
@@ -46,6 +49,15 @@ export class ImageServices {
             console.log(error)
             throw error;
         }
+    }
+
+    static createNFT = async (nft: NFTInterface) => {
+        try {
+            await NFTModel.create(nft);
+        } catch (error) {
+            throw error;
+        }
+
     }
 
     static getS3ParamsToUpload = (filename: string, username: string) => {
