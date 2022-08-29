@@ -49,6 +49,15 @@ export class UserServices {
 		}
 	}
 
+	static getUserByUsername = async (username: string) => {
+		try {
+			const { _id } = new DBObject(await UserModel.findOne({ username: username })).get() as UserDoc;
+			return _id
+		} catch (e) {
+			throw e;
+		}
+	}
+
 
 	static createToken = (): string => {
 		try {
@@ -203,6 +212,7 @@ export class UserServices {
 				userType: Role.USER.toString()
 			});
 		} catch (error) {
+			console.log(error)
 			throw ErrorFactory.TYPE_ERROR(`Invalid types`)
 		}
 	}

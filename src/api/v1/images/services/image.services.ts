@@ -6,7 +6,10 @@ import axios, { AxiosRequestConfig } from 'axios'
 import FormData from 'form-data'
 import Jimp from 'jimp'
 import { spawn } from 'child_process'
-import { Blob } from "buffer";
+import { NFTDoc, NFTInterface, classes, db } from '../../db'
+
+const { NFTModel } = db
+const { NFT } = classes
 
 export class ImageServices {
 
@@ -48,6 +51,15 @@ export class ImageServices {
         }
     }
 
+    static createNFT = async (nft: NFTInterface) => {
+        try {
+            await NFTModel.create(nft);
+        } catch (error) {
+            throw error;
+        }
+
+    }
+
     static getS3ParamsToUpload = (filename: string, username: string) => {
         const filePath = path.join(IMAGE_CREDS.localImageFolderPath, username, filename)
         const key = username + "/" + filename
@@ -61,6 +73,20 @@ export class ImageServices {
         };
         return params
     }
+
+
+    static getGenerateImageS3ParamsToUpload = (filepath: string, filename: string, username: string) => {
+        const key = username + "/" + filename;
+        const blob = fs.readFileSync(filepath)
+        var params = {
+            Bucket: AWS_CREDS.container,
+            Key: key,
+            Body: blob,
+            ContentType: 'image/png'
+        };
+        return params
+    }
+
 
     static constructUrl = (name: any) => {
         return `https://${AWS_CREDS.container}.s3.ap-south-1.amazonaws.com/${name}`
@@ -222,4 +248,26 @@ export class ImageServices {
         }
         return
     }
+
+
+    static saveGeneratedService = async (username: string, inputFilePath: any) => {
+        if (!fs.existsSync(IMAGE_CREDS.localImageFolderPath)) {
+            fs.mkdirSync(IMAGE_CREDS.localImageFolderPath);
+        }
+        try {
+            const currTime = new Date().toISOString().replace(/T/, '_').replace(/\..+/, '').replace(':', '_').replace(':', '_')
+            const cutReceivedFileName = 'cut_received_'.concat(currTime).concat('.png')
+            const cutReceivedFilePath = path.join(process.cwd(), IMAGE_CREDS.localImageFolderPath, cutReceivedFileName)
+            const src = fs.readFileSync(inputFilePath);
+            fs.writeFileSync(cutReceivedFilePath, src);
+            return { cutReceivedFilePath, cutReceivedFileName };
+        } catch (err) {
+
+            console.log("erorr here");
+            console.log(err);
+        }
+
+    }
 }
+
+

@@ -11,6 +11,7 @@ import { Referal, ReferalInterface, ReferalDoc, ReferalModel } from './user/mode
 import { BlockChainWallet, BlockChainWalletInterface, BlockChainWalletDoc, BlockChainWalletModel } from './user/models/block_chain_wallet'
 import { Notification, NotificationInterface, NotificationDoc, NotificationModel } from './user/models/notifiactions'
 import { FeedBack, FeedBackDoc, FeedBackInterface, FeedBackModel } from './feedback/feedback.model'
+import { NFT, NFTDoc, NFTInterface, NFTModel } from './images/model/nft_model'
 
 
 import { MONGO_DB_URL } from '../../config'
@@ -29,25 +30,25 @@ export const db = {
 	mongoose,
 	// Modals
 	UserModel, InAppWalletModel, RazorPayModel, TranscationModel, ReferalModel,
-	RewardModel, BlockChainWalletModel, NotificationModel, FeedBackModel
+	RewardModel, BlockChainWalletModel, NotificationModel, FeedBackModel, NFTModel
 }
 
 export const RUBY_VALUE_PER_ONE_INR = 100;
 
 export const classes = {
 	User, RazorPay, Transaction, InAppWallet, Reward, Referal, BlockChainWallet,
-	Notification, FeedBack
+	Notification, FeedBack, NFT
 }
 
 export {
 	// Types
 	UserInterface, InAppWalletInterface, RazorPayInterface, TransactionInterface,
 	ReferalInterface, RewardInterface, BlockChainWalletInterface, NotificationInterface,
-	FeedBackInterface
+	FeedBackInterface, NFTInterface
 }
 
 export {
 	// Docs
 	UserDoc, InAppWalletDoc, RazorPayDoc, TransactionDoc, RewardDoc, ReferalDoc,
-	BlockChainWalletDoc, NotificationDoc, FeedBackDoc
+	BlockChainWalletDoc, NotificationDoc, FeedBackDoc, NFTDoc
 }
