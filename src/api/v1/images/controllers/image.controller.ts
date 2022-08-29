@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { ConnectionStates } from 'mongoose';
 import { HttpFactory } from '../../http/http_factory';
 import { ImageServices } from '../services/image.services'
 
@@ -75,7 +76,32 @@ export class ImageController {
 	}
 
 	static saveGenerateImage = async (req: Request, res: Response) => {
+		try {
+			if (!req.file)
+				return HttpFactory.STATUS_500_INTERNAL_SERVER_ERROR({ message: "empty image" }, res)
 
+			const { username } = req.body;
+			const filePath = req.file.path
+			const resp = await ImageServices.saveGeneratedService(req.file.filename, filePath);
+
+			console.log(req.body, filePath)
+
+			const s3 = ImageServices.getAWSS3Object();
+			const params = ImageServices.getGenerateImageS3ParamsToUpload(resp?.cutReceivedFilePath ?? "", resp?.cutReceivedFileName ?? "", username)
+			s3.upload(params, function (err: any, data: any) {
+				if (err) {
+					console.log(err); // an error occurred
+				}
+				else {
+					// ImageServices.deleteUserFiles(filename, username)
+				}
+				return HttpFactory.STATUS_200_OK({ isUploaded: true }, res)
+			})
+			return HttpFactory.STATUS_500_INTERNAL_SERVER_ERROR({ message: "Something went wrong here" }, res);
+		} catch (err) {
+			console.log(err);
+			return HttpFactory.STATUS_500_INTERNAL_SERVER_ERROR({ message: "Something went wrong" }, res);
+		}
 	}
 
 }

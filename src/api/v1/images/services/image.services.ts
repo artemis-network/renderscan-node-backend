@@ -62,6 +62,20 @@ export class ImageServices {
         return params
     }
 
+
+    static getGenerateImageS3ParamsToUpload = (filepath: string, filename: string, username: string) => {
+        const key = username + "/" + filename;
+        const blob = fs.readFileSync(filepath)
+        var params = {
+            Bucket: AWS_CREDS.container,
+            Key: key,
+            Body: blob,
+            ContentType: 'image/png'
+        };
+        return params
+    }
+
+
     static constructUrl = (name: any) => {
         return `https://${AWS_CREDS.container}.s3.ap-south-1.amazonaws.com/${name}`
     }
@@ -210,4 +224,26 @@ export class ImageServices {
         }
         return
     }
+
+
+    static saveGeneratedService = async (username: string, inputFilePath: any) => {
+        if (!fs.existsSync(IMAGE_CREDS.localImageFolderPath)) {
+            fs.mkdirSync(IMAGE_CREDS.localImageFolderPath);
+        }
+        try {
+            const currTime = new Date().toISOString().replace(/T/, '_').replace(/\..+/, '').replace(':', '_').replace(':', '_')
+            const cutReceivedFileName = 'cut_received_'.concat(currTime).concat('.png')
+            const cutReceivedFilePath = path.join(process.cwd(), IMAGE_CREDS.localImageFolderPath, cutReceivedFileName)
+            const src = fs.readFileSync(inputFilePath);
+            fs.writeFileSync(cutReceivedFilePath, src);
+            return { cutReceivedFilePath, cutReceivedFileName };
+        } catch (err) {
+
+            console.log("erorr here");
+            console.log(err);
+        }
+
+    }
 }
+
+
