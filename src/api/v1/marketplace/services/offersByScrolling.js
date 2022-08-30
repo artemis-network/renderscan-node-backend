@@ -133,7 +133,7 @@ const extractOffersFromGraphqlApiResponse = async (
           ? `https://opensea.io/assets/${assetContract}/${tokenId}`
           : undefined,
         floorPrice: {
-          amount: o.node.orderData.bestAskV2.priceType?.eth || "0",
+          amount: o.node.orderData.bestAskV2?.priceType?.eth || "0",
           currency: "ETH",
         },
       };
