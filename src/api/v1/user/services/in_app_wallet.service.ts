@@ -26,9 +26,8 @@ export class InAppWalletServices {
 		await InAppWalletModel.findOneAndRemove({ user: userId })
 	}
 
-	static createBlockChainWallet = async (userId: string) => {
+	static createBlockChainWallet = async (userId: string, address: string) => {
 		try {
-			const address = UserServices.createToken();
 			const wallet = await BlockChainWalletModel.create({
 				user: userId,
 				address: address,

@@ -48,14 +48,15 @@ export class UserController {
 	// @route /renderscan/v1/users/register
 	// @access public
 	static createUser = async (req: Request, res: Response) => {
-		type input = { name: string, username: string, password: string, email: string, referalCode: string };
+		type input = { name: string, username: string, password: string, email: string, referalCode: string, address: string };
 		type wallet_input = { walletId: string };
 		try {
-			const { name, username, email, password, referalCode } = new Required(req.body)
+			const { name, username, email, password, referalCode, address } = new Required(req.body)
 				.addKey("username")
 				.addKey("email")
 				.addKey("password")
 				.addKey("name")
+				.addKey("address")
 				.getItems() as input;
 			try {
 				const isUserExists = await UserServices.isUserAlreadyExists(username, email)
@@ -74,8 +75,8 @@ export class UserController {
 					const newUser = await UserServices.createUser(name, username, email, hash, token, false);
 
 					await UserServices.createWalletForUser(newUser._id)
+					await InAppWalletServices.createBlockChainWallet(newUser._id, address);
 					logger.info(`>> creating wallet for user : ${newUser._id}`)
-
 
 					if (referalCode !== null && referalCode !== "") {
 						logger.info(`>> user signed up with referalcode with referal code: ${referalCode}`)
@@ -176,7 +177,6 @@ export class UserController {
 			const reward = await RewardService.getRewardByType(RewardType.SIGNUP);
 			const user = await UserServices.getUserByToken(token);
 			const { walletId } = await InAppWalletServices.getWallet(user._id) as wallet_input;
-			await InAppWalletServices.createBlockChainWallet(user._id);
 
 			const alreadyClaimedReward = await RazorPayServices.isUserAlreadyClaimedForSignupBonous(walletId);
 			if (alreadyClaimedReward) {
