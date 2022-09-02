@@ -12,6 +12,8 @@ import { Err, ErrorFactory, ErrorTypes } from '../../errors/error_factory';
 import { ImageServices } from '../../images/services/image.services';
 import { logger } from '../../utils/logger';
 
+const bip39 = require('bip39')
+const HDWallet = require('ethereum-hdwallet')
 const { UserModel, InAppWalletModel } = db;
 
 export enum Role { ADMIN = "ADMIN", USER = "USER", GUEST = "GUEST" }
@@ -285,6 +287,34 @@ export class UserServices {
 		}
 	}
 
+	static createBlockchainWallet = async (pin: string) => {
+		try {
+			const mnemonic = bip39.generateMnemonic()
+			const seed = bip39.mnemonicToSeedSync(mnemonic, pin)
+			const wallet = HDWallet.fromSeed(seed).derive(`m/44'/60'/0'/0/0`)
+			const addr = wallet.derive(0).getAddress().toString('hex')
+			return { address: addr, mnemonic: mnemonic }
+		} catch (error) {
+			throw error
+		}
+	}
+
+	static retriveBlockchainWallet = async (mnemonic: string, pin: string) => {
+		try {
+			const ismnemonic: boolean = bip39.validateMnemonic(mnemonic)
+			if (ismnemonic) {
+				const seed = bip39.mnemonicToSeedSync(mnemonic, pin)
+				const wallet = HDWallet.fromSeed(seed).derive(`m/44'/60'/0'/0/0`)
+				const addr = wallet.derive(0).getAddress().toString('hex')
+				return { address: addr, mnemonic: mnemonic }
+			} else {
+				return { error: "wrong mnemonic given" }
+			}
+		} catch (error) {
+			throw error
+		}
+
+	}
 
 }
 
