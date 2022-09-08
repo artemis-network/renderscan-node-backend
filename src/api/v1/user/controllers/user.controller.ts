@@ -74,6 +74,9 @@ export class UserController {
 					const hash = await UserServices.hashPassword(password)
 					const newUser = await UserServices.createUser(name, username, email, hash, token, false);
 
+					const defaultAvatarUrl = "https://renderscan-user-avatars.s3.ap-south-1.amazonaws.com/avatar.png"
+					await newUser.updateOne({ avatarUrl: defaultAvatarUrl });
+
 					await UserServices.createWalletForUser(newUser._id)
 					await InAppWalletServices.createBlockChainWallet(newUser._id, address);
 					logger.info(`>> creating wallet for user : ${newUser._id}`)
@@ -248,7 +251,7 @@ export class UserController {
 
 			const token: string = JWT.generateJWTToken(user?._id);
 			logger.info(`>> verification token done `)
-			const response = { error: false, accessToken: token, email: user?.email, userId: user?._id, username: user?.username, errorType: 'NONE' }
+			const response = { error: false, accessToken: token, email: user?.email, userId: user?._id, username: user?.username, errorType: 'NONE', avatarUrl: user.avatarUrl }
 			return HttpFactory.STATUS_200_OK(response, res)
 		} catch (err) {
 			const error = err as Error;
@@ -440,11 +443,15 @@ export class UserController {
 
 
 					const token: string = JWT.generateJWTToken(user?._id);
-					const response = { error: false, errorType: "NONE", username: username, accessToken: token, userId: user._id, email: email, message: "SUCCESS" };
+					const response = { error: false, errorType: "NONE", username: username, accessToken: token, userId: user._id, email: email, message: "SUCCESS", avatarUrl: user.avatarUrl };
 					return HttpFactory.STATUS_200_OK(response, res)
 				}
 				const stdToken = UserServices.createToken();
 				const { _id }: any = await UserServices.createUser(username, username, email, "", stdToken, true)
+
+				const defaultAvatarUrl = "https://renderscan-user-avatars.s3.ap-south-1.amazonaws.com/avatar.png"
+				await UserServices.setAvtarUrl(_id, defaultAvatarUrl);
+
 				UserServices.createWalletForUser(_id)
 				await InAppWalletServices.createBlockChainWallet(_id, address);
 				await UserServices.setIsVerified(stdToken, true);
@@ -462,7 +469,7 @@ export class UserController {
 				}
 
 				const token: string = JWT.generateJWTToken(_id);
-				const response = { error: false, errorType: "NONE", username: username, accessToken: token, userId: _id, email: email, message: "SUCCESS" };
+				const response = { error: false, errorType: "NONE", username: username, accessToken: token, userId: _id, email: email, message: "SUCCESS", avatarUrl: defaultAvatarUrl };
 				return HttpFactory.STATUS_200_OK(response, res)
 			} catch (err) {
 				const error = err as Err;

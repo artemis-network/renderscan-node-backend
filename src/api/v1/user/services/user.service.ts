@@ -120,15 +120,19 @@ export class UserServices {
 	// experimental
 	// try catch with new DBObject
 	static setIsVerified = async (token: string, isVerified: boolean) => {
-		const crypto = require('crypto'), hash = crypto.getHashes();
-		let referalCode = crypto.createHash('sha1').update(token).digest('hex');
+
 		try {
-			new DBObject(await UserModel.findOneAndUpdate({ token: token }, {
+			const user = await UserModel.findOne({ token: token });
+			const random = Math.floor(Math.random() * (100 - 10 + 1) + 10);
+			const referalCode = "rend" + user?.username + random.toString();
+			await user?.updateOne({
 				$set: {
 					isVerified: isVerified,
-					referalCode: referalCode,
+					referalCode: referalCode
 				}
-			})).get()
+			})
+
+
 		} catch (error) {
 			throw error;
 		}
