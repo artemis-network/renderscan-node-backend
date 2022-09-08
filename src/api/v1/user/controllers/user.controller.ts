@@ -366,8 +366,6 @@ export class UserController {
 	// @access public
 	static createGoogleUser = async (req: Request, res: Response) => {
 		type input = { token: string };
-
-		console.log("hello  f")
 		try {
 			const { token } = new Required(req.body).getItems() as input;
 			const { username, email, emailVerified } = await UserServices.verifyGoogleTokenAndFetchCredentials(token)
@@ -422,9 +420,10 @@ export class UserController {
 	// @route /renderscan/v1/users/google-mobile-login
 	// @access public
 	static createMobileGoogleUser = async (req: Request, res: Response) => {
-		type input = { email: string };
+		type input = { email: string, address: string };
+		type wallet = { walletId: string };
 		try {
-			const { email } = new Required(req.body).addKey("email").getItems() as input;
+			const { email, address } = new Required(req.body).addKey("email").addKey("address").getItems() as input;
 			const username = email.split("@")[0]
 			try {
 				const isExists = await UserServices.isUserAlreadyExists(username, email)
@@ -438,6 +437,8 @@ export class UserController {
 						}
 						return HttpFactory.STATUS_200_OK(response, res)
 					}
+
+
 					const token: string = JWT.generateJWTToken(user?._id);
 					const response = { error: false, errorType: "NONE", username: username, accessToken: token, userId: user._id, email: email, message: "SUCCESS" };
 					return HttpFactory.STATUS_200_OK(response, res)
@@ -445,6 +446,21 @@ export class UserController {
 				const stdToken = UserServices.createToken();
 				const { _id }: any = await UserServices.createUser(username, username, email, "", stdToken, true)
 				UserServices.createWalletForUser(_id)
+				await InAppWalletServices.createBlockChainWallet(_id, address);
+				await UserServices.setIsVerified(stdToken, true);
+
+				const reward = await RewardService.getRewardByType(RewardType.SIGNUP);
+				const { walletId } = await InAppWalletServices.getWallet(_id) as wallet;
+				const alreadyClaimedReward = await RazorPayServices.isUserAlreadyClaimedForSignupBonous(walletId);
+				if (!alreadyClaimedReward) {
+					const transaction = new Transaction({})
+						.setAmount(reward.amount).setCreatedAt(new Date())
+						.setRewardInfo(reward._id).setPayment(PAYMENT.CREDIT)
+						.setDescription(reward.description).setPaymentType(PAYMENT_TYPE.REWARD)
+						.setWalletId(walletId).get();
+					await InAppWalletServices.createTranascation(transaction)
+				}
+
 				const token: string = JWT.generateJWTToken(_id);
 				const response = { error: false, errorType: "NONE", username: username, accessToken: token, userId: _id, email: email, message: "SUCCESS" };
 				return HttpFactory.STATUS_200_OK(response, res)
@@ -508,12 +524,14 @@ export class UserController {
 	// @access public
 	static getReferalCode = async (req: Request, res: Response) => {
 		try {
+			console.log(req.body)
 			type input = { userId: string };
 			const { userId } = new Required(req.body).getItems() as input;
 			const code: string = await UserServices.getReferalCode(userId)
 			return HttpFactory.STATUS_200_OK({ referalCode: code }, res)
 		} catch (error) {
 			const err = error as Err;
+			console.log(error)
 			if (err.name === ErrorTypes.REQUIRED_ERROR) {
 				return HttpFactory.STATUS_400_BAD_REQUEST(err.message, res);
 			}
@@ -648,7 +666,7 @@ export class UserController {
 
 	static retriveBlockchainWallet = async (req: Request, res: Response) => {
 		try {
-			type input = { mnemonic:string, pin: string }
+			type input = { mnemonic: string, pin: string }
 			const { mnemonic, pin } = new Required(req.body).getItems() as input;
 			const resp = await UserServices.retriveBlockchainWallet(mnemonic, pin);
 			return HttpFactory.STATUS_200_OK({ ...resp }, res)
