@@ -120,19 +120,16 @@ export class UserServices {
 	// experimental
 	// try catch with new DBObject
 	static setIsVerified = async (token: string, isVerified: boolean) => {
-
 		try {
 			const user = await UserModel.findOne({ token: token });
 			const random = Math.floor(Math.random() * (100 - 10 + 1) + 10);
-			const referalCode = "rend" + user?.username + random.toString();
+			const referalCode = "REND" + user?.username.substring(0, 3).toUpperCase() + random.toString();
 			await user?.updateOne({
 				$set: {
 					isVerified: isVerified,
 					referalCode: referalCode
 				}
 			})
-
-
 		} catch (error) {
 			throw error;
 		}

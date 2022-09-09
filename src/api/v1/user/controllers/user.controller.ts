@@ -74,6 +74,7 @@ export class UserController {
 					const hash = await UserServices.hashPassword(password)
 					const newUser = await UserServices.createUser(name, username, email, hash, token, false);
 
+
 					const defaultAvatarUrl = "https://renderscan-user-avatars.s3.ap-south-1.amazonaws.com/avatar.png"
 					await newUser.updateOne({ avatarUrl: defaultAvatarUrl });
 
