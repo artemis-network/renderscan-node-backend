@@ -20,6 +20,7 @@ RUN npm install
 
 COPY src ./src
 COPY slugs ./slugs
+COPY .near-credentials ./.near-credentials
 RUN npm run build
 
 
