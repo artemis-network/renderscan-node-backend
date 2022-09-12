@@ -37,8 +37,10 @@ router.post(`${userPrefix}/update`, UserController.updateUser)
 router.post(`${userPrefix}/details`, UserController.getUserDetails)
 router.post(`${userPrefix}/update-email`, UserController.updateNewEmail)
 
-router.post(`${userPrefix}/createwallet`, UserController.createBlockchainWallet)
-router.post(`${userPrefix}/retrivewallet`, UserController.retriveBlockchainWallet)
+router.post(`${userPrefix}/createethwallet`, UserController.createEthereumWallet)
+router.post(`${userPrefix}/retriveethwallet`, UserController.retriveEthereumWallet)
+router.post(`${userPrefix}/createnearwallet`, UserController.createNearWallet)
+router.post(`${userPrefix}/retrivenearwallet`, UserController.retriveNearWallet)
 
 
 

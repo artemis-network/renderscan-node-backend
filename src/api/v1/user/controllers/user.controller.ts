@@ -627,11 +627,11 @@ export class UserController {
 		}
 	}
 
-	static createBlockchainWallet = async (req: Request, res: Response) => {
+	static createEthereumWallet = async (req: Request, res: Response) => {
 		try {
 			type input = { pin: string }
 			const { pin } = new Required(req.body).getItems() as input;
-			const resp = await UserServices.createBlockchainWallet(pin);
+			const resp = await UserServices.createEthereumWallet(pin);
 			return HttpFactory.STATUS_200_OK({ ...resp }, res)
 		} catch (error) {
 			const err = error as Err;
@@ -643,14 +643,13 @@ export class UserController {
 			}
 			return HttpFactory.STATUS_500_INTERNAL_SERVER_ERROR(err.message, res);
 		}
-
 	}
 
-	static retriveBlockchainWallet = async (req: Request, res: Response) => {
+	static retriveEthereumWallet = async (req: Request, res: Response) => {
 		try {
-			type input = { mnemonic:string, pin: string }
+			type input = { mnemonic: string, pin: string }
 			const { mnemonic, pin } = new Required(req.body).getItems() as input;
-			const resp = await UserServices.retriveBlockchainWallet(mnemonic, pin);
+			const resp = await UserServices.retriveEthereumWallet(mnemonic, pin);
 			return HttpFactory.STATUS_200_OK({ ...resp }, res)
 		} catch (error) {
 			const err = error as Err;
@@ -662,7 +661,42 @@ export class UserController {
 			}
 			return HttpFactory.STATUS_500_INTERNAL_SERVER_ERROR(err.message, res);
 		}
+	}
 
+	static createNearWallet = async (req: Request, res: Response) => {
+		try {
+			type input = { accountId: string }
+			const { accountId } = new Required(req.body).getItems() as input;
+			const resp = await UserServices.createNearWallet(accountId);
+			return HttpFactory.STATUS_200_OK(resp, res)
+		} catch (error) {
+			const err = error as Err;
+			if (err.name === ErrorTypes.REQUIRED_ERROR) {
+				return HttpFactory.STATUS_400_BAD_REQUEST(err.message, res);
+			}
+			if (err.name === ErrorTypes.OBJECT_NOT_FOUND_ERROR) {
+				return HttpFactory.STATUS_404_NOT_FOUND(err.message, res);
+			}
+			return HttpFactory.STATUS_500_INTERNAL_SERVER_ERROR(err.message, res);
+		}
+	}
+
+	static retriveNearWallet = async (req: Request, res: Response) => {
+		try {
+			type input = { mnemonic: string}
+			const { mnemonic } = new Required(req.body).getItems() as input;
+			const resp = await UserServices.retriveNearWallet(mnemonic);
+			return HttpFactory.STATUS_200_OK({ ...resp }, res)
+		} catch (error) {
+			const err = error as Err;
+			if (err.name === ErrorTypes.REQUIRED_ERROR) {
+				return HttpFactory.STATUS_400_BAD_REQUEST(err.message, res);
+			}
+			if (err.name === ErrorTypes.OBJECT_NOT_FOUND_ERROR) {
+				return HttpFactory.STATUS_404_NOT_FOUND(err.message, res);
+			}
+			return HttpFactory.STATUS_500_INTERNAL_SERVER_ERROR(err.message, res);
+		}
 	}
 }
 

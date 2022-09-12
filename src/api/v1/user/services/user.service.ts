@@ -2,7 +2,7 @@ import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 
 import { OAuth2Client, UserRefreshClient } from 'google-auth-library'
-import { AVATAR_PATH, GOOGLE_OAUTH_CLIENT } from '../../../../config'
+import { AVATAR_PATH, GOOGLE_OAUTH_CLIENT, NEAR_TESTNET_CONNECTION_CONFIG, NEAR_CREDS_PATH } from '../../../../config'
 
 const client: any = new OAuth2Client(GOOGLE_OAUTH_CLIENT)
 
@@ -14,6 +14,8 @@ import { logger } from '../../utils/logger';
 
 const bip39 = require('bip39')
 const HDWallet = require('ethereum-hdwallet')
+const { connect, keyStores, utils } = require("near-api-js");
+const { parseSeedPhrase, generateSeedPhrase } = require('near-seed-phrase');
 const { UserModel, InAppWalletModel } = db;
 
 export enum Role { ADMIN = "ADMIN", USER = "USER", GUEST = "GUEST" }
@@ -287,7 +289,7 @@ export class UserServices {
 		}
 	}
 
-	static createBlockchainWallet = async (pin: string) => {
+	static createEthereumWallet = async (pin: string) => {
 		try {
 			const mnemonic = bip39.generateMnemonic()
 			const seed = bip39.mnemonicToSeedSync(mnemonic, pin)
@@ -299,7 +301,7 @@ export class UserServices {
 		}
 	}
 
-	static retriveBlockchainWallet = async (mnemonic: string, pin: string) => {
+	static retriveEthereumWallet = async (mnemonic: string, pin: string) => {
 		try {
 			const ismnemonic: boolean = bip39.validateMnemonic(mnemonic)
 			if (ismnemonic) {
@@ -313,8 +315,48 @@ export class UserServices {
 		} catch (error) {
 			throw error
 		}
-
 	}
 
+	static createNearWallet = async (accountId: string) => {
+		try {
+			const { seedPhrase, publicKey, secretKey } = generateSeedPhrase()
+			const myKeyStore = new keyStores.UnencryptedFileSystemKeyStore(NEAR_CREDS_PATH);
+			NEAR_TESTNET_CONNECTION_CONFIG["keyStore"] = myKeyStore
+			const nearConnection = await connect(NEAR_TESTNET_CONNECTION_CONFIG);
+			const creatorAccount = await nearConnection.account("renderverse.testnet");
+			const extendedAccountID = accountId + "-renderverse.testnet"
+			const resp = await creatorAccount.functionCall({
+				contractId: "testnet",
+				methodName: "create_account",
+				args: {
+					new_account_id: extendedAccountID,
+					new_public_key: publicKey,
+				},
+				gas: "300000000000000",
+				attachedDeposit: utils.format.parseNearAmount("0.01"),
+			});
+			const url = "https://wallet.testnet.near.org/auto-import-secret-key#" + extendedAccountID + "/" + secretKey
+			for (let outcome in resp.receipts_outcome) {
+				if ('Failure' in resp.receipts_outcome[outcome].outcome.status) {
+					return { error: "Error in creating account, Account ID may be already present" + extendedAccountID }
+				}
+			}
+			return { address: publicKey, mnemonic: seedPhrase, privatekey: secretKey, accountId: extendedAccountID, walletUrl: url }
+		} catch (error) {
+			throw error
+		}
+	}
+
+	static retriveNearWallet = async (mnemonic: string) => {
+		try {
+			const { publicKey, secretKey } = parseSeedPhrase(mnemonic);
+			// SHOW user account ID here
+			const url = "https://wallet.testnet.near.org/recover-seed-phrase"
+			return { address: publicKey, mnemonic: mnemonic, privatekey: secretKey, recoverUrl: url }
+
+		} catch (error) {
+			throw error
+		}
+	}
 }
 
