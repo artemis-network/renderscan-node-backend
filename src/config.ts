@@ -45,7 +45,17 @@ const RAZOR_PAY = {
 	KEY_SECRET: process.env.RAZOR_PAY_KEY_SECRET,
 }
 
+var NEAR_TESTNET_CONNECTION_CONFIG = {
+	networkId: "testnet",
+	keyStore: "",
+	nodeUrl: "https://rpc.testnet.near.org",
+	walletUrl: "https://wallet.testnet.near.org",
+	helperUrl: "https://helper.testnet.near.org",
+	explorerUrl: "https://explorer.testnet.near.org",
+}
+
 const AVATAR_PATH = process.env.AVATAR_PATH ?? ""
+const NEAR_CREDS_PATH = process.env.NEAR_CREDS_PATH ?? ""
 
 export {
 	PORT,
@@ -64,5 +74,7 @@ export {
 	LOCAL_DATA_FOLDER_PATH,
 	LOCAL_SLUGS_FOLDER_PATH,
 	BLOCKDAEMON_API_KEY,
-	NFTPORT_API_KEY
+	NFTPORT_API_KEY,
+	NEAR_TESTNET_CONNECTION_CONFIG,
+	NEAR_CREDS_PATH
 }
