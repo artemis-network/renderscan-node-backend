@@ -6,6 +6,7 @@ const walletPrefix = parentPrefix + "/wallets"
 const paymentsPrefix = parentPrefix + "/payments"
 const imagePrefix = parentPrefix + "/images"
 const marketplacePrefix = parentPrefix + "/marketplace"
+const nftsPrefix = parentPrefix + "/nfts"
 
 export {
 	userPrefix,
@@ -14,5 +15,6 @@ export {
 	parentPrefix,
 	imagePrefix,
 	marketplacePrefix,
-	feedbackPrefix
+	feedbackPrefix,
+	nftsPrefix
 }

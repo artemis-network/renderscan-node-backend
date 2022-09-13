@@ -111,7 +111,7 @@ export class UserController {
 					);
 
 					logger.info(`>> sending verification email for ${email}`)
-					const response = { message: "Successfully signup successfully, verification email has sent", errorType: "NONE", error: false };
+					const response = { message: "Please click on the confirmation link we sent you by email to keep using our service.", errorType: "NONE", error: false };
 					return HttpFactory.STATUS_200_OK(response, res)
 
 				} catch (error) {
@@ -121,7 +121,7 @@ export class UserController {
 						const response = {
 							error: true,
 							errorType: "USER_ALREADY_EXIST",
-							message: "Bad request",
+							message: "Email is invalid or already taken",
 						}
 						logger.error(`>> bad request : ${err.message}`)
 						return HttpFactory.STATUS_200_OK(response, res)
@@ -233,7 +233,7 @@ export class UserController {
 			if (!authorized) {
 				const response = {
 					error: true,
-					message: "invalid username or password",
+					message: "The username and password don't match.",
 					errorType: "INVALID_CRENDENTAILS",
 				}
 				return HttpFactory.STATUS_200_OK(response, res)
@@ -243,7 +243,7 @@ export class UserController {
 			if (!user?.isVerified) {
 				const response = {
 					error: true,
-					message: "verify email, to login",
+					message: "⚠️ Your account hasn't been confirmed yet.",
 					errorType: "UNAUTHORIZED_EMAIL"
 				}
 				return HttpFactory.STATUS_200_OK(response, res)
