@@ -214,10 +214,11 @@ export class UserController {
 	// @route /renderscan/v1/users/login
 	// @access public
 	static loginUser = async (req: Request, res: Response) => {
-		type input = { username: string, password: string }
-		const { username, password } = new Required(req.body)
+		type input = { username: string, password: string, address: string, nearPublicId: string }
+		const { username, password, nearPublicId, address } = new Required(req.body)
 			.addKey("username").addKey("password").getItems() as input;
 		try {
+			console.log(req.body)
 			const user = await UserServices.authenticateUser(username)
 			if (user.isGoogleAccount) {
 				const response = {
@@ -253,6 +254,7 @@ export class UserController {
 			const token: string = JWT.generateJWTToken(user?._id);
 			logger.info(`>> verification token done `)
 			const response = { error: false, accessToken: token, email: user?.email, userId: user?._id, username: user?.username, errorType: 'NONE', avatarUrl: user.avatarUrl }
+			await UserServices.updateNearBlockChainDetails(user?._id, nearPublicId, address)
 			return HttpFactory.STATUS_200_OK(response, res)
 		} catch (err) {
 			const error = err as Error;
@@ -424,10 +426,10 @@ export class UserController {
 	// @route /renderscan/v1/users/google-mobile-login
 	// @access public
 	static createMobileGoogleUser = async (req: Request, res: Response) => {
-		type input = { email: string, address: string };
+		type input = { email: string, address: string, nearPublicId: string };
 		type wallet = { walletId: string };
 		try {
-			const { email, address } = new Required(req.body).addKey("email").addKey("address").getItems() as input;
+			const { email, address, nearPublicId } = new Required(req.body).addKey("email").addKey("address").getItems() as input;
 			const username = email.split("@")[0]
 			try {
 				const isExists = await UserServices.isUserAlreadyExists(username, email)
@@ -445,6 +447,7 @@ export class UserController {
 
 					const token: string = JWT.generateJWTToken(user?._id);
 					const response = { error: false, errorType: "NONE", username: username, accessToken: token, userId: user._id, email: email, message: "SUCCESS", avatarUrl: user.avatarUrl };
+					await UserServices.updateNearBlockChainDetails(user._id, nearPublicId, address)
 					return HttpFactory.STATUS_200_OK(response, res)
 				}
 				const stdToken = UserServices.createToken();
@@ -471,6 +474,7 @@ export class UserController {
 
 				const token: string = JWT.generateJWTToken(_id);
 				const response = { error: false, errorType: "NONE", username: username, accessToken: token, userId: _id, email: email, message: "SUCCESS", avatarUrl: defaultAvatarUrl };
+				await UserServices.updateNearBlockChainDetails(_id, nearPublicId, address)
 				return HttpFactory.STATUS_200_OK(response, res)
 			} catch (err) {
 				const error = err as Err;

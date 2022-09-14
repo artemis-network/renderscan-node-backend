@@ -2,14 +2,15 @@ import mongoose, { Schema, Model, Document } from 'mongoose';
 import { UserInterface, USER_NAMING } from './user.model'
 
 export interface BlockChainWalletInterface {
-	chain: string; address: string; isActive: Boolean; user: UserInterface | string
+	chain: string; address: string; isActive: Boolean; user: UserInterface | string, publicId: string
 }
 export interface BlockChainWalletDoc extends BlockChainWalletInterface, Document { }
 
 const BlockChainWalletSchema = new Schema({
 	user: { type: Schema.Types.ObjectId, ref: USER_NAMING },
 	isActive: { type: Schema.Types.Boolean, required: true, },
-	address: { type: Schema.Types.String, required: true, unique: true },
+	address: { type: Schema.Types.String, required: true, },
+	publicId: { type: Schema.Types.String, },
 	chain: { type: Schema.Types.String },
 });
 
@@ -24,6 +25,10 @@ export class BlockChainWallet {
 	}
 	setUser(user: BlockChainWalletInterface["user"]) {
 		this.wallet.user = user;
+		return this;
+	}
+	setPublicId(publicId: BlockChainWalletInterface["publicId"]) {
+		this.wallet.publicId = publicId;
 		return this;
 	}
 	setChain(chain: BlockChainWalletInterface["chain"]) {

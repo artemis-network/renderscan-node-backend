@@ -1,5 +1,6 @@
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
+import { errorMonitor } from 'form-data';
 
 import { OAuth2Client, UserRefreshClient } from 'google-auth-library'
 import { AVATAR_PATH, GOOGLE_OAUTH_CLIENT, NEAR_TESTNET_CONNECTION_CONFIG, NEAR_CREDS_PATH } from '../../../../config'
@@ -11,6 +12,7 @@ import { DBObject } from '../../db_object';
 import { Err, ErrorFactory, ErrorTypes } from '../../errors/error_factory';
 import { ImageServices } from '../../images/services/image.services';
 import { logger } from '../../utils/logger';
+import { BlockChainWalletModel } from '../models/block_chain_wallet';
 
 const bip39 = require('bip39')
 const HDWallet = require('ethereum-hdwallet')
@@ -26,6 +28,21 @@ type mintNFTInput = {
 }
 
 export class UserServices {
+
+	static updateNearBlockChainDetails = async (userId: string, newPublicId: string, address: string) => {
+		try {
+			const wallet: any = await BlockChainWalletModel.findOne({ user: userId })
+			await wallet.updateOne({
+				$set: {
+					publicId: newPublicId,
+					address: address
+				}
+			});
+			await wallet.save();
+		} catch (error) {
+			throw error;
+		}
+	}
 
 	static setAvtarUrl = async (userId: string, avatarUrl: string) => {
 		try {
@@ -330,24 +347,23 @@ export class UserServices {
 			NEAR_TESTNET_CONNECTION_CONFIG["keyStore"] = myKeyStore
 			const nearConnection = await connect(NEAR_TESTNET_CONNECTION_CONFIG);
 			const creatorAccount = await nearConnection.account("renderverse.testnet");
-			const extendedAccountID = accountId + "-renderverse.testnet"
 			const resp = await creatorAccount.functionCall({
 				contractId: "testnet",
 				methodName: "create_account",
 				args: {
-					new_account_id: extendedAccountID,
+					new_account_id: accountId,
 					new_public_key: publicKey,
 				},
 				gas: "300000000000000",
 				attachedDeposit: utils.format.parseNearAmount("0.01"),
 			});
-			const url = "https://wallet.testnet.near.org/auto-import-secret-key#" + extendedAccountID + "/" + secretKey
+			const url = "https://wallet.testnet.near.org/auto-import-secret-key#" + accountId + "/" + secretKey
 			for (let outcome in resp.receipts_outcome) {
 				if ('Failure' in resp.receipts_outcome[outcome].outcome.status) {
-					return { error: "Error in creating account, Account ID may be already present" + extendedAccountID }
+					return { error: "Error in creating account, Account ID may be already present" + accountId }
 				}
 			}
-			return { address: publicKey, mnemonic: seedPhrase, privatekey: secretKey, accountId: extendedAccountID, walletUrl: url }
+			return { address: publicKey, mnemonic: seedPhrase, privatekey: secretKey, accountId: accountId, walletUrl: url }
 		} catch (error) {
 			throw error
 		}
