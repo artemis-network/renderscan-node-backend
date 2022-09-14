@@ -707,6 +707,25 @@ export class UserController {
 		}
 	}
 
+	//Change the inputs for this method
+	static mintNearNFT = async (req: Request, res: Response) => {
+		try {
+			type input = { accountId: string }
+			const { accountId } = new Required(req.body).getItems() as input;
+			const resp = await UserServices.mintNEARNFT(accountId);
+			return HttpFactory.STATUS_200_OK(resp, res)
+		} catch (error) {
+			const err = error as Err;
+			if (err.name === ErrorTypes.REQUIRED_ERROR) {
+				return HttpFactory.STATUS_400_BAD_REQUEST(err.message, res);
+			}
+			if (err.name === ErrorTypes.OBJECT_NOT_FOUND_ERROR) {
+				return HttpFactory.STATUS_404_NOT_FOUND(err.message, res);
+			}
+			return HttpFactory.STATUS_500_INTERNAL_SERVER_ERROR(err.message, res);
+		}
+	}
+
 	static retriveNearWallet = async (req: Request, res: Response) => {
 		try {
 			type input = { mnemonic: string }

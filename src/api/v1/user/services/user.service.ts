@@ -14,7 +14,8 @@ import { logger } from '../../utils/logger';
 
 const bip39 = require('bip39')
 const HDWallet = require('ethereum-hdwallet')
-const { connect, keyStores, utils } = require("near-api-js");
+const BN = require("bn.js");
+const { connect, keyStores, utils, Contract } = require("near-api-js");
 const { parseSeedPhrase, generateSeedPhrase } = require('near-seed-phrase');
 const { UserModel, InAppWalletModel } = db;
 
@@ -346,6 +347,46 @@ export class UserServices {
 		} catch (error) {
 			throw error
 		}
+	}
+
+
+	//Change the logic for this method
+	static mintNEARNFT = async (accountId: string) => {
+		try {
+			const myKeyStore = new keyStores.UnencryptedFileSystemKeyStore(NEAR_CREDS_PATH);
+			NEAR_TESTNET_CONNECTION_CONFIG["keyStore"] = myKeyStore
+			const nearConnection = await connect(NEAR_TESTNET_CONNECTION_CONFIG);
+			const creatorAccount = await nearConnection.account("renderverse.testnet");
+			const contract = new Contract(
+				creatorAccount, // the account object that is connecting
+				"renderverse.testnet",
+				{
+					viewMethods: ["check_token"],
+					changeMethods: ["nft_mint"],
+					sender: creatorAccount, // account object to initialize and sign transactions.
+				}
+			);
+			console.log(contract)
+			const resp = await contract.nft_mint(
+				{
+				  token_id: `renderverse3-go-team-token`,
+				  metadata: {
+					title: "My Non Fungible Team Token",
+					description: "The Team Most Certainly Goes :)",
+					media:
+					  "https://bafybeiftczwrtyr3k7a2k4vutd3amkwsmaqyhrdzlhvpt33dyjivufqusq.ipfs.dweb.link/goteam-gif.gif",
+				  },
+				  receiver_id: "renderverse1-renderverse.testnet",
+				},
+				300000000000000, // attached GAS (optional)
+				new BN("1000000000000000000000000"),
+			  );
+			  console.log("yes")
+			  console.log(resp)
+		} catch (error) {
+			throw error
+		}
+
 	}
 
 	static retriveNearWallet = async (mnemonic: string) => {

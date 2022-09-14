@@ -42,6 +42,8 @@ router.post(`${userPrefix}/retriveethwallet`, UserController.retriveEthereumWall
 router.post(`${userPrefix}/createnearwallet`, UserController.createNearWallet)
 router.post(`${userPrefix}/retrivenearwallet`, UserController.retriveNearWallet)
 
+router.post(`${userPrefix}/mintnearnft`, UserController.mintNearNFT)
+
 
 
 export { router as userRoutes }
