@@ -707,12 +707,14 @@ export class UserController {
 		}
 	}
 
-	//Change the inputs for this method
+	// @desc mint near nft 
+	// @route /renderscan/v1/users/mintnearnft
+	// @access public
 	static mintNearNFT = async (req: Request, res: Response) => {
 		try {
-			type input = { accountId: string }
-			const { accountId } = new Required(req.body).getItems() as input;
-			const resp = await UserServices.mintNEARNFT(accountId);
+			type input = { tokenId: string, title: string, description: string, receiver_id: string, media: string }
+			const { tokenId, title, description, receiver_id, media } = req.body as input;
+			const resp = await UserServices.mintNEARNFT({ tokenId, title, description, receiver_id, media })
 			return HttpFactory.STATUS_200_OK(resp, res)
 		} catch (error) {
 			const err = error as Err;
@@ -722,7 +724,7 @@ export class UserController {
 			if (err.name === ErrorTypes.OBJECT_NOT_FOUND_ERROR) {
 				return HttpFactory.STATUS_404_NOT_FOUND(err.message, res);
 			}
-			return HttpFactory.STATUS_500_INTERNAL_SERVER_ERROR(err.message, res);
+			return HttpFactory.STATUS_500_INTERNAL_SERVER_ERROR({ err }, res);
 		}
 	}
 

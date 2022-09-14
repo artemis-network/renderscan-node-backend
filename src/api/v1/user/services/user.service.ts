@@ -21,6 +21,10 @@ const { UserModel, InAppWalletModel } = db;
 
 export enum Role { ADMIN = "ADMIN", USER = "USER", GUEST = "GUEST" }
 
+type mintNFTInput = {
+	tokenId: string, title: string, description: string, receiver_id: string, media: string
+}
+
 export class UserServices {
 
 	static setAvtarUrl = async (userId: string, avatarUrl: string) => {
@@ -350,8 +354,9 @@ export class UserServices {
 	}
 
 
+
 	//Change the logic for this method
-	static mintNEARNFT = async (accountId: string) => {
+	static mintNEARNFT = async (input: mintNFTInput) => {
 		try {
 			const myKeyStore = new keyStores.UnencryptedFileSystemKeyStore(NEAR_CREDS_PATH);
 			NEAR_TESTNET_CONNECTION_CONFIG["keyStore"] = myKeyStore
@@ -366,24 +371,22 @@ export class UserServices {
 					sender: creatorAccount, // account object to initialize and sign transactions.
 				}
 			);
-			console.log(contract)
 			const resp = await contract.nft_mint(
 				{
-				  token_id: `renderverse3-go-team-token`,
-				  metadata: {
-					title: "My Non Fungible Team Token",
-					description: "The Team Most Certainly Goes :)",
-					media:
-					  "https://bafybeiftczwrtyr3k7a2k4vutd3amkwsmaqyhrdzlhvpt33dyjivufqusq.ipfs.dweb.link/goteam-gif.gif",
-				  },
-				  receiver_id: "renderverse1-renderverse.testnet",
+					token_id: input.tokenId,
+					metadata: {
+						title: input.title,
+						description: input.description,
+						media: input.media,
+					},
+					receiver_id: input.receiver_id,
 				},
 				300000000000000, // attached GAS (optional)
 				new BN("1000000000000000000000000"),
-			  );
-			  console.log("yes")
-			  console.log(resp)
+			);
+			return resp
 		} catch (error) {
+			console.error(error)
 			throw error
 		}
 

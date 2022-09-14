@@ -44,8 +44,7 @@ export class ImageController {
 				if (err)
 					console.log(err, err.stack); // an error occurred
 				else {
-					const nft = new NFT({
-					})
+					const nft = new NFT({})
 						.setS3Url(data.Location)
 						.setType(ImageType.SCANNED)
 						.setUser(_id)

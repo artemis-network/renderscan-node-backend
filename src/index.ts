@@ -11,7 +11,6 @@ import { userRoutes } from './api/v1/user/user.routes'
 import { paymentsRoutes } from './api/v1/user/payments.routes'
 import { imageRoutes } from './api/v1/images/images.routes'
 import { marketplaceRoutes } from './api/v1/marketplace/marketplace.routes'
-import { nftRoutes } from './api/v1/nft/nft.route';
 
 import bodyParser from 'body-parser';
 import { MarketplaceServices } from './api/v1/marketplace/services/marketplace.services';
@@ -45,6 +44,5 @@ app.use(imageRoutes);
 app.use(paymentsRoutes);
 app.use(marketplaceRoutes);
 app.use(feedbackRoutes)
-app.use(nftRoutes);
 
 app.listen(PORT, async () => await init());
