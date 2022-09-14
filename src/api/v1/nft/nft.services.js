@@ -1,5 +1,6 @@
 import { connect, KeyPair, keyStores, utils, Contract, WalletConnection } from "near-api-js";
 import path from 'path';
+import { homedir } from "os";
 import BN from 'bn.js'
 // import { data } from "cheerio/lib/api/attributes";
 
@@ -8,7 +9,7 @@ const { parseSeedPhrase, generateSeedPhrase } = require("near-seed-phrase");
 //const { publicKey, secretKey } = parseSeedPhrase("slab copper wool universe creek identify concert into ritual cereal sight ");
 
 const CREDENTIALS_DIR = ".near-credentials";
-const credentialsPath = path.join(__dirname, CREDENTIALS_DIR);
+const credentialsPath = path.join(homedir(), CREDENTIALS_DIR);
 const myKeyStore = new keyStores.UnencryptedFileSystemKeyStore(credentialsPath);
 
 var connectionConfig = {
@@ -78,7 +79,7 @@ export class NFTServices {
 		console.log(contract);
 		const resp = await contract.nft_mint(
 			{
-				token_id: input.tokenId,
+				token_id: `renderverse.testnet-${input.tokenId}`,
 				metadata: {
 					title: input.title,
 					description: input.description,

@@ -1,9 +1,9 @@
 import express from 'express';
-import multer from 'multer';
 import { nftsPrefix } from '../config';
+import { NFTController } from './nft.controller';
 
 const router = express.Router();
 
-router.post(`${nftsPrefix}/mint`)
+router.post(`${nftsPrefix}/mint`, NFTController.mintNFT)
 
 export { router as nftRoutes }

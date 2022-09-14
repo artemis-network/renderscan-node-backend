@@ -709,7 +709,7 @@ export class UserController {
 
 	static retriveNearWallet = async (req: Request, res: Response) => {
 		try {
-			type input = { mnemonic: string}
+			type input = { mnemonic: string }
 			const { mnemonic } = new Required(req.body).getItems() as input;
 			const resp = await UserServices.retriveNearWallet(mnemonic);
 			return HttpFactory.STATUS_200_OK({ ...resp }, res)

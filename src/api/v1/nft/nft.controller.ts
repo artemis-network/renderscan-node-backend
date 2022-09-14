@@ -8,17 +8,13 @@ import { NFTServices } from './nft.services'
 
 
 export class NFTController {
-
+	// @desc mint near nft 
+	// @route /renderscan/v1/nfts/mint
+	// @access public
 	static mintNFT = async (req: Request, res: Response) => {
 		type input = { tokenId: stringMap, title: string, description: string, receiver_id: string, media: string }
 		try {
-			const { tokenId, title, description, receiver_id, media } = new Required({})
-				.addKey("tokenId")
-				.addKey("title")
-				.addKey("description")
-				.addKey("receiver_id")
-				.addKey("media")
-				.getItems() as input;
+			const { tokenId, title, description, receiver_id, media } = req.body as input;
 
 			const resp = await NFTServices.mintNFT({ tokenId, title, description, receiver_id, media })
 			console.log(resp)
