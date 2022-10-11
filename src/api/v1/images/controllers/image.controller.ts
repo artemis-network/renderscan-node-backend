@@ -1,5 +1,4 @@
 import { Request, Response } from "express";
-import { ConnectionStates } from "mongoose";
 import { HttpFactory } from "../../http/http_factory";
 import { UserServices } from "../../user/services/user.service";
 import { ImageType, NFT, NFTModel } from "../model/nft_model";

@@ -14,8 +14,8 @@ export interface NFTInterface {
   s3Url?: string;
   type?: ImageType;
   user?: string;
-  hash: string;
-  url: string;
+  hash?: string;
+  url?: string;
 }
 export interface NFTDoc extends NFTInterface, Document {}
 
@@ -39,6 +39,37 @@ const NFTSchema = new Schema({
 });
 
 export const NFT_NAMING: string = "NFT";
+
+export class NFT {
+  nft: NFTInterface;
+  constructor(nft: NFTInterface) {
+    this.nft = nft;
+  }
+
+  setName(name: NFTInterface["name"]) {
+    this.nft.name = name;
+    return this;
+  }
+  setFilename(filename: NFTInterface["filename"]) {
+    this.nft.filename = filename;
+    return this;
+  }
+  setUser(user: NFTInterface["user"]) {
+    this.nft.user = user;
+    return this;
+  }
+  setS3Url(s3Url: NFTInterface["s3Url"]) {
+    this.nft.s3Url = s3Url;
+    return this;
+  }
+  setType(type: NFTInterface["type"]) {
+    this.nft.type = type;
+    return this;
+  }
+  get() {
+    return this.nft;
+  }
+}
 
 export const NFTModel: Model<NFTDoc> = mongoose.model<NFTDoc>(
   NFT_NAMING,
