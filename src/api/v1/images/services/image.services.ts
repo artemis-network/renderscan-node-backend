@@ -7,6 +7,7 @@ import FormData from 'form-data'
 import Jimp from 'jimp'
 import { spawn } from 'child_process'
 import { NFTDoc, NFTInterface, classes, db } from '../../db'
+import {DalleServices} from "../services/Dalle.js"
 
 const { NFTModel } = db
 const { NFT } = classes
@@ -267,6 +268,11 @@ export class ImageServices {
             console.log(err);
         }
 
+    }
+
+    static generateImages = async (inputText: string) => {
+        // let resp = await DalleServices.generateImages(inputText)
+        // return resp;
     }
 }
 

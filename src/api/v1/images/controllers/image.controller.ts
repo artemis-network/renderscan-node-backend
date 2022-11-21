@@ -134,4 +134,15 @@ export class ImageController {
 		}
 	}
 
+	static generateImages = async (req: Request, res: Response) => {
+		try {
+			const { inputText, username } = req.body
+			const resp = ImageServices.generateImages(inputText)
+			return HttpFactory.STATUS_200_OK({ images: resp }, res)
+
+		} catch (e) {
+			return HttpFactory.STATUS_500_INTERNAL_SERVER_ERROR({ message: e }, res)
+		}
+	}
+
 }
