@@ -156,7 +156,7 @@ export class UserController {
           await EmailSender.sendMail(
             EMAIL_CONFIG.email,
             email,
-            "Welcome to Renderplay, Please Verify Your Email",
+            "Welcome to Renderverse, Please Verify Your Email",
             "",
             html.toString()
           );
@@ -857,7 +857,7 @@ export class UserController {
       await EmailSender.sendMail(
         EMAIL_CONFIG.email,
         email,
-        "Welcome to Renderplay, Please Verify Your Email",
+        "Welcome to Renderverse, Please Verify Your Email",
         "",
         html.toString()
       );
@@ -880,8 +880,8 @@ export class UserController {
 
   static createEthereumWallet = async (req: Request, res: Response) => {
     try {
-      type input = { pin: string };
-      const { pin } = new Required(req.body).getItems() as input;
+      type input = { pin: string; userId: string };
+      const { pin, userId } = new Required(req.body).getItems() as input;
       const resp = await UserServices.createEthereumWallet(pin);
       return HttpFactory.STATUS_200_OK({ ...resp }, res);
     } catch (error) {
@@ -897,12 +897,15 @@ export class UserController {
   };
 
   static retriveEthereumWallet = async (req: Request, res: Response) => {
+    console.log(req.body);
+    type input = { mnemonic: string; pin: string };
     try {
-      type input = { mnemonic: string; pin: string };
       const { mnemonic, pin } = new Required(req.body).getItems() as input;
       const resp = await UserServices.retriveEthereumWallet(mnemonic, pin);
+      console.log(resp);
       return HttpFactory.STATUS_200_OK({ ...resp }, res);
     } catch (error) {
+      console.log(error);
       const err = error as Err;
       if (err.name === ErrorTypes.REQUIRED_ERROR) {
         return HttpFactory.STATUS_400_BAD_REQUEST(err.message, res);
@@ -919,6 +922,7 @@ export class UserController {
       type input = { accountId: string };
       const { accountId } = new Required(req.body).getItems() as input;
       const resp = await UserServices.createNearWallet(accountId);
+      console.log(resp);
       return HttpFactory.STATUS_200_OK(resp, res);
     } catch (error) {
       const err = error as Err;

@@ -407,7 +407,9 @@ export class UserServices {
 
   static retriveEthereumWallet = async (mnemonic: string, pin: string) => {
     try {
+      console.log(mnemonic, pin);
       const ismnemonic: boolean = bip39.validateMnemonic(mnemonic);
+      console.log(ismnemonic);
       if (ismnemonic) {
         const seed = bip39.mnemonicToSeedSync(mnemonic, pin);
         const wallet = HDWallet.fromSeed(seed).derive(`m/44'/60'/0'/0/0`);
@@ -417,6 +419,7 @@ export class UserServices {
         return { error: "wrong mnemonic given" };
       }
     } catch (error) {
+      console.log(error);
       throw error;
     }
   };
@@ -448,13 +451,14 @@ export class UserServices {
         "/" +
         secretKey;
       for (let outcome in resp.receipts_outcome) {
-        if ("Failure" in resp.receipts_outcome[outcome].outcome.status) {
-          return {
-            error:
-              "Error in creating account, Account ID may be already present" +
-              accountId,
-          };
-        }
+        console.log(outcome);
+        // if ("Failure" in resp.receipts_outcome[outcome].outcome.status) {
+        //   return {
+        //     error:
+        //       "Error in creating account, Account ID may be already present" +
+        //       accountId,
+        //   };
+        // }
       }
       return {
         address: publicKey,
