@@ -20,5 +20,6 @@ router.post(`${imagePrefix}/save`, ImageController.saveImages);
 router.post(`${imagePrefix}/save-generate-image`, upload.single("data"), ImageController.saveGenerateImage);
 router.post(`${imagePrefix}/cut`, upload.single('data'), ImageController.cutImage);
 router.post(`${imagePrefix}/background`, upload.single('data'), ImageController.addBackground);
+router.post(`${imagePrefix}/generateimages`, ImageController.generateImages);
 
 export { router as imageRoutes }
