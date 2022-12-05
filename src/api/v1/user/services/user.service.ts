@@ -426,49 +426,31 @@ export class UserServices {
 
   static createNearWallet = async (accountId: string) => {
     try {
-      const { seedPhrase, publicKey, secretKey } = generateSeedPhrase();
-      const myKeyStore = new keyStores.UnencryptedFileSystemKeyStore(
-        NEAR_CREDS_PATH
-      );
-      NEAR_TESTNET_CONNECTION_CONFIG["keyStore"] = myKeyStore;
+      const { seedPhrase, publicKey, secretKey } = generateSeedPhrase()
+      const myKeyStore = new keyStores.UnencryptedFileSystemKeyStore(NEAR_CREDS_PATH);
+      NEAR_TESTNET_CONNECTION_CONFIG["keyStore"] = myKeyStore
       const nearConnection = await connect(NEAR_TESTNET_CONNECTION_CONFIG);
-      const creatorAccount = await nearConnection.account(
-        "renderverse.testnet"
-      );
+      const creatorAccount = await nearConnection.account("renderverse.testnet");
+      const extendedAccountID = accountId + "-renderverse.testnet"
       const resp = await creatorAccount.functionCall({
         contractId: "testnet",
         methodName: "create_account",
         args: {
-          new_account_id: accountId,
+          new_account_id: extendedAccountID,
           new_public_key: publicKey,
         },
         gas: "300000000000000",
         attachedDeposit: utils.format.parseNearAmount("0.01"),
       });
-      const url =
-        "https://wallet.testnet.near.org/auto-import-secret-key#" +
-        accountId +
-        "/" +
-        secretKey;
+      const url = "https://wallet.testnet.near.org/auto-import-secret-key#" + extendedAccountID + "/" + secretKey
       for (let outcome in resp.receipts_outcome) {
-        console.log(outcome);
-        // if ("Failure" in resp.receipts_outcome[outcome].outcome.status) {
-        //   return {
-        //     error:
-        //       "Error in creating account, Account ID may be already present" +
-        //       accountId,
-        //   };
-        // }
+        if ('Failure' in resp.receipts_outcome[outcome].outcome.status) {
+          return { error: "Error in creating account, Account ID may be already present" + extendedAccountID }
+        }
       }
-      return {
-        address: publicKey,
-        mnemonic: seedPhrase,
-        privatekey: secretKey,
-        accountId: accountId,
-        walletUrl: url,
-      };
+      return { address: publicKey, mnemonic: seedPhrase, privatekey: secretKey, accountId: extendedAccountID, walletUrl: url }
     } catch (error) {
-      throw error;
+      throw error
     }
   };
 
